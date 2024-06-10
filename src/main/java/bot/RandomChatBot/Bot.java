@@ -80,8 +80,8 @@ public class Bot extends TelegramLongPollingCommandBot {
         message.setText("Бот успешно запустился!");
         try {
             execute(message);
-        } catch (TelegramApiException ignored) {
-
+        } catch (TelegramApiException e) {
+            log.warn("Не получилось отправить сообщение", e);
         }
     }
 
@@ -118,7 +118,7 @@ public class Bot extends TelegramLongPollingCommandBot {
             try {
                 execute(new AnswerPreCheckoutQuery(update.getPreCheckoutQuery().getId(), true, "ВСЕ ОК"));
             } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
+                log.warn("Не получилось отправить сообщение", e);
             }
         }
     }
