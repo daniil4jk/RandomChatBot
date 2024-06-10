@@ -5,9 +5,9 @@ meta:
     version: 17
 build:
   artifacts:
-    target/*.jar: /
-  args: 'spring-boot:repackage '
+    out/*.jar: /
+  args: spring-boot:repackage
 run:
-  jarName: out/artifacts/myFirstBot_jar
+  jarName: out/artifacts/myFirstBot_jar/myFirstBot.jar
   persistenceMount: /data
   containerPort: 8084
