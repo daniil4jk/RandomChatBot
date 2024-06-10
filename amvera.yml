@@ -8,6 +8,6 @@ build:
     out/*.jar: /
   args: spring-boot:repackage
 run:
-  jarName: out/artifacts/myFirstBot.jar
+  jarName: out\artifacts\myFirstBot.jar
   persistenceMount: /data
   containerPort: 8084
