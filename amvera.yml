@@ -1,0 +1,13 @@
+meta:
+  environment: jvm
+  toolchain:
+    name: maven
+    version: 17
+build:
+  artifacts:
+    target/*.jar: /
+  args: 'spring-boot:repackage '
+run:
+  jarName: out/artifacts/myFirstBot_jar
+  persistenceMount: /data
+  containerPort: 8084
