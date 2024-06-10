@@ -41,7 +41,7 @@ class UserProperties {
                     try {
                         Thread.sleep(60000);
                     } catch (InterruptedException e) {
-                        log.error("Поток обновления даты был прерван!", e);
+                        log.error("Поток обновления даты и времени был прерван!", e);
                     }
                     currentDate = new Date();
                     calendar.setTime(currentDate);

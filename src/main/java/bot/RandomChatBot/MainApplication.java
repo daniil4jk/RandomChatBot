@@ -10,6 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -50,16 +51,18 @@ class Initializer {
     }
 }
 
+@Configuration
 class Users {
-	static final HashMap<User, List<Message>> messages = new HashMap<>();
-	static final HashMap<User, UserProperties> properties = new HashMap<>();
-	static final ConcurrentHashMap<User, Timer> finders = new ConcurrentHashMap<>();
-	static final ConcurrentHashMap<User, User> pairs = new ConcurrentHashMap<>();
-	static final HashMap<Long, User> chatIDs = new HashMap<>();
-	static final HashMap<User, Consumer<String>> waitingMessageEvents = new HashMap<>();
-	public static final String OVERRIDE = "mne_pohyi";
+	final HashMap<User, List<Message>> messages = new HashMap<>();
+	final HashMap<User, UserProperties> properties = new HashMap<>();
+	final ConcurrentHashMap<User, Timer> finders = new ConcurrentHashMap<>();
+	final ConcurrentHashMap<User, User> pairs = new ConcurrentHashMap<>();
+	final HashMap<User, List<User>> friends = new HashMap<>();
+	final HashMap<Long, User> chatIDs = new HashMap<>();
+	final HashMap<User, Consumer<String>> waitingMessageEvents = new HashMap<>();
+	final String OVERRIDE = "mne_pohyi";
 
-	static {
+	{
 		new Thread(() -> {
 			final Scanner sc = new Scanner(System.in);
 			while (true) {
@@ -110,35 +113,18 @@ class Users {
 	}
 }
 
-class KeyboardConstants {
-	public static final String REGISTER_THREAD = "regThread";
-	public static final String RANDOM = "Искать собеседника \uD83D\uDD25";
-	public static final String FORM = "Анкета " + EmojiConstants.FORM;
-	public static final String STOP = "Остановить " + EmojiConstants.STOP;
-	public static final String SETTINGS = "Настроить поиск " + EmojiConstants.SETTINGS;
-	public static final String SET_MALE_GENDER = "setMaleGender";
-	public static final String SET_FEMALE_GENDER = "setFemaleGender";
-	public static final String SET_GENDER = "setGender";
-	public static final String SET_AGE = "setAge";
-	public static final String SET_FINDING_GENDER = "setFindingGender";
-	public static final String SET_MALE_FINDING_GENDER = "setMaleFindingGender";
-	public static final String SET_FEMALE_FINDING_GENDER = "setFemaleFindingGender";
-	public static final String SET_MIN_FIND_AGE = "setMinFindAge";
-	public static final String SET_MAX_FIND_AGE = "setMaxFindAge";
-	public static final String PREMIUM = "Премиум " + EmojiConstants.PREMIUM;
-}
-
-class EmojiConstants {
-	public static final String START = "\uD83D\uDCAB";
-	public static final String FORM = "\uD83C\uDF04";
-	public static final String SETTINGS = "⚙\uFE0F";
-	public static final String AGE = "\uD83D\uDD25";
-	public static final String GENDER = "\uD83D\uDE0B";
-	public static final String FINDING_GENDER = "\uD83D\uDE0F";
-	public static final String MIN_FINDING_AGE = "⏬"; //!!"⏫⏬"
-	public static final String MAX_FINDING_AGE = "⏫"; //!!"⏫⏬"
-	public static final String RANDOM = "\uD83C\uDFB2";
-	public static final String STOP = "❌";
-	public static final String HELP = "\uD83D\uDCC4";
-	public static final String PREMIUM = "\uD83C\uDF15";
+abstract class UserInteractiveBotCommand extends BotCommand {
+	protected final Users users;
+	/**
+	 * Construct a command
+	 *
+	 * @param commandIdentifier the unique identifier of this command (e.g. the command string to
+	 *                          enter into chat)
+	 * @param description       the description of this command
+	 * @param users 			users storage
+	 */
+	public UserInteractiveBotCommand(String commandIdentifier, String description, Users users) {
+		super(commandIdentifier, description);
+		this.users = users;
+	}
 }

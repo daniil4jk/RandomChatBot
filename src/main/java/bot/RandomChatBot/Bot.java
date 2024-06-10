@@ -1,5 +1,6 @@
 package bot.RandomChatBot;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
@@ -7,55 +8,68 @@ import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.AnswerPreCheckoutQuery;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.invoices.CreateInvoiceLink;
-import org.telegram.telegrambots.meta.api.methods.send.SendDice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.api.objects.payments.SuccessfulPayment;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 @Slf4j
 @Component
 public class Bot extends TelegramLongPollingCommandBot {
-    static BotConfig config;
-    private final BotCommand startCommand = new StartCommand("start", "Запустить бота " + EmojiConstants.START);
-    private final BotCommand setAgeCommand = new SetAgeCommand("setage", "Установить возраст " + EmojiConstants.AGE);
-    private final BotCommand setGenderCommand = new SetGenderCommand("setgender", "Выбрать пол " + EmojiConstants.GENDER);
-    private final BotCommand setFindingGenderCommand = new SetFindingGenderCommand("setfindinggender", "Указать желаемый пол " + EmojiConstants.FINDING_GENDER);
-    private final BotCommand setMinFindingAgeCommand = new SetMinFindingAgeCommand("setminfindingage", "Указать мин. возраст поиска " + EmojiConstants.MIN_FINDING_AGE);
-    private final BotCommand setMaxFindingAgeCommand = new SetMaxFindingAgeCommand("setmaxfindingage", "Указать макс. возраст поиска " + EmojiConstants.MAX_FINDING_AGE);
-    private final BotCommand findCommand = new FindCommand("find", "Найти человека по никнейму)");
-    private final BotCommand randomCommand = new FindRandomCommand("random", "Найти случайного собеседника " + EmojiConstants.RANDOM);
-    private final BotCommand formCommand = new FormCommand("form", "Ваша анкета " + EmojiConstants.FORM);
-    private final BotCommand findSettingsCommand = new FindSettingsCommand("findsettings", "Настройки поиска " + EmojiConstants.SETTINGS);
-    private final BotCommand premiumCommand = new PremiumCommand("premium", "Платная подписка");
-    private final BotCommand stopCommand = new StopCommand("stop", "Остановить чат " + EmojiConstants.STOP);
-    private final BotCommand helpCommand = new HelpCommand("help", "Список всех команд " + EmojiConstants.HELP);
+    private final BotConfig config;
+    private final Users users;
+    private final BotCommand startCommand;
+    private final BotCommand setAgeCommand;
+    private final BotCommand setGenderCommand;
+    private final BotCommand setFindingGenderCommand;
+    private final BotCommand setMinFindingAgeCommand;
+    private final BotCommand setMaxFindingAgeCommand;
+    private final BotCommand findCommand;
+    private final BotCommand randomCommand;
+    private final BotCommand formCommand;
+    private final BotCommand findSettingsCommand;
+    private final BotCommand premiumCommand;
+    private final BotCommand stopCommand;
+    private final BotCommand helpCommand;
 
-    public Bot(BotConfig config) {
+    public Bot(BotConfig config, Users users) {
         super(config.getToken());
-        Bot.config = config;
+        this.config = config;
+        this.users = users;
+        startCommand = new StartCommand("start", "Запустить бота " + EmojiConstants.START, this.users, this.config);
         register(startCommand);
+        setGenderCommand = new SetGenderCommand("setgender", "Выбрать пол " + EmojiConstants.GENDER, this.users);
         register(setGenderCommand);
+        setAgeCommand = new SetAgeCommand("setage", "Установить возраст " + EmojiConstants.AGE, this.users);
         register(setAgeCommand);
+        setFindingGenderCommand = new SetFindingGenderCommand("setfindinggender", "Указать желаемый пол " + EmojiConstants.FINDING_GENDER, this.users);
         register(setFindingGenderCommand);
+        setMinFindingAgeCommand = new SetMinFindingAgeCommand("setminfindingage", "Указать мин. возраст поиска " + EmojiConstants.MIN_FINDING_AGE, this.users);
         register(setMinFindingAgeCommand);
+        setMaxFindingAgeCommand = new SetMaxFindingAgeCommand("setmaxfindingage", "Указать макс. возраст поиска " + EmojiConstants.MAX_FINDING_AGE, this.users);
         register(setMaxFindingAgeCommand);
+        findCommand = new FindCommand("find", "Найти человека по никнейму)", this.users);
         register(findCommand);
+        randomCommand = new FindRandomCommand("random", "Найти случайного собеседника " + EmojiConstants.RANDOM, this.users);
         register(randomCommand);
+        formCommand = new FormCommand("form", "Ваша анкета " + EmojiConstants.FORM, this.users);
         register(formCommand);
+        findSettingsCommand = new FindSettingsCommand("findsettings", "Настройки поиска " + EmojiConstants.SETTINGS, this.users);
         register(findSettingsCommand);
+        premiumCommand = new PremiumCommand("premium", "Платная подписка", this.users);
         register(premiumCommand);
+        stopCommand = new StopCommand("stop", "Остановить чат " + EmojiConstants.STOP, this.users);
         register(stopCommand);
+        helpCommand = new HelpCommand("help", "Список всех команд " + EmojiConstants.HELP);
         register(helpCommand);
         sayAboutStart();
     }
@@ -80,10 +94,10 @@ public class Bot extends TelegramLongPollingCommandBot {
     public void processNonCommandUpdate(Update update) {
         if (update.hasMessage()) {
             Message message = update.getMessage();
-            if (Users.waitingMessageEvents.containsKey(message.getFrom())) {
+            if (users.waitingMessageEvents.containsKey(message.getFrom())) {
                 processingMessageEvents(message);
             } else if (!processingMessageCommands(message)) {
-                if (message.hasText() && Users.pairs.containsKey(message.getFrom())) {
+                if (message.hasText() && users.pairs.containsKey(message.getFrom())) {
                         copyMessage(update);
                 } else if (message.hasSuccessfulPayment()) {
                     servePayment(message.getSuccessfulPayment(), message.getFrom());
@@ -110,10 +124,10 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void copyMessage(Update update) {
-        Users.messages.get(update.getMessage().getFrom()).add(update.getMessage());
+        users.messages.get(update.getMessage().getFrom()).add(update.getMessage());
         CopyMessage m = CopyMessage.builder()
                 .fromChatId(update.getMessage().getChatId())
-                .chatId(Users.pairs.get(update.getMessage().getFrom()).getId())
+                .chatId(users.pairs.get(update.getMessage().getFrom()).getId())
                 .messageId(update.getMessage().getMessageId())
                 .build();
         try {
@@ -124,7 +138,7 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void copyFileToAdminCheck(Message message) {
-        UserProperties userProperties = Users.properties.get(message.getFrom());
+        UserProperties userProperties = users.properties.get(message.getFrom());
         String fileID = null;
         if (message.hasPhoto()) fileID = message.getPhoto().get(message.getPhoto().size() - 1).getFileId();
         else if (message.hasVideo()) fileID = message.getVideo().getFileId();
@@ -180,7 +194,7 @@ public class Bot extends TelegramLongPollingCommandBot {
 
     private void servePayment(SuccessfulPayment payment, User user) {
         int days = Integer.parseInt(payment.getInvoicePayload());
-        Users.properties.get(user).addPremium(Calendar.DATE, days);
+        users.properties.get(user).addPremium(Calendar.DATE, days);
     }
 
     private boolean processingMessageCommands(Message message) {
@@ -188,7 +202,7 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void processingCallbackQuery(CallbackQuery callback) {
-        User user = Users.chatIDs.get(callback.getMessage().getChatId());
+        User user = users.chatIDs.get(callback.getMessage().getChatId());
         if (user == null) return;
         keyboardSwitch(callback.getData(), user);
     }
@@ -207,11 +221,11 @@ public class Bot extends TelegramLongPollingCommandBot {
             case KeyboardConstants.STOP -> stopCommand
                     .execute(this, user, null, null);
             case KeyboardConstants.SET_MALE_GENDER -> {
-                Users.properties.get(user).setGender(Gender.Male);
+                users.properties.get(user).setGender(Gender.Male);
                 writeAboutSuccessGender(user);
             }
             case KeyboardConstants.SET_FEMALE_GENDER -> {
-                Users.properties.get(user).setGender(Gender.Female);
+                users.properties.get(user).setGender(Gender.Female);
                 writeAboutSuccessGender(user);
             }
             case KeyboardConstants.SET_GENDER ->  setGenderCommand
@@ -221,11 +235,11 @@ public class Bot extends TelegramLongPollingCommandBot {
             case KeyboardConstants.SET_FINDING_GENDER ->  setFindingGenderCommand
                     .execute(this, user, null, null);
             case KeyboardConstants.SET_MALE_FINDING_GENDER -> {
-                Users.properties.get(user).setFindingGender(Gender.Male);
+                users.properties.get(user).setFindingGender(Gender.Male);
                 writeAboutSuccessGender(user);
             }
             case KeyboardConstants.SET_FEMALE_FINDING_GENDER -> {
-                Users.properties.get(user).setFindingGender(Gender.Female);
+                users.properties.get(user).setFindingGender(Gender.Female);
                 writeAboutSuccessGender(user);
             }
             case KeyboardConstants.SET_MIN_FIND_AGE -> setMinFindingAgeCommand
@@ -241,17 +255,17 @@ public class Bot extends TelegramLongPollingCommandBot {
 
     private void processingMessageEvents(Message userMessage) {
         User user = userMessage.getFrom();
-        Users.waitingMessageEvents.get(user).accept(userMessage.getText());
-        Users.waitingMessageEvents.remove(user);
+        users.waitingMessageEvents.get(user).accept(userMessage.getText());
+        users.waitingMessageEvents.remove(user);
     }
 
     private void createRegThread(User user) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Users.properties.put(user, new UserProperties());
-                UserProperties currentUserProperties = Users.properties.get(user);
-                setGender(user, new String[]{Users.OVERRIDE});
+                users.properties.put(user, new UserProperties());
+                UserProperties currentUserProperties = users.properties.get(user);
+                setGender(user, new String[]{users.OVERRIDE});
                 do {
                     try {
                         Thread.sleep(500);
@@ -259,15 +273,15 @@ public class Bot extends TelegramLongPollingCommandBot {
                         throw new RuntimeException(e);
                     }
                 } while (currentUserProperties.isGenderNotStated());
-                setAge(user, new String[]{Users.OVERRIDE});
+                setAge(user, new String[]{users.OVERRIDE});
                 do {
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                } while (Users.waitingMessageEvents.containsKey(user));
-                Users.messages.put(user, new ArrayList<>());
+                } while (users.waitingMessageEvents.containsKey(user));
+                users.messages.put(user, new ArrayList<>());
                 SendMessage successMessage = SendMessage.builder()
                         .chatId(user.getId())
                         .text("Вы успешно зарегистрированы, нажимайте /random и погнали чатиться\uD83E\uDD73)")
@@ -307,21 +321,24 @@ public class Bot extends TelegramLongPollingCommandBot {
 }
 
 @Slf4j
-class StartCommand extends BotCommand {
+class StartCommand extends UserInteractiveBotCommand {
+    private final BotConfig config;
     /**
      * Construct a command
      *
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
+     * @param users             users storage
      */
-    public StartCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
+    public StartCommand(String commandIdentifier, String description, Users users, BotConfig config) {
+        super(commandIdentifier, description, users);
+        this.config = config;
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        Users.chatIDs.put(chat.getId(), user);
+        users.chatIDs.put(chat.getId(), user);
         sendHelloMessage(absSender, user);
         reportRegistration(user);
     }
@@ -366,7 +383,7 @@ class StartCommand extends BotCommand {
 
     private void reportRegistrationToAdmin(AbsSender absSender, User user) {
         SendMessage errorMessage = SendMessage.builder()
-                .chatId(Bot.config.getAdminUID())
+                .chatId(config.getAdminUID())
                 .text("Зашел user " + user.getUserName())
                 .build();
         try {
@@ -377,575 +394,35 @@ class StartCommand extends BotCommand {
     }
 }
 
+
 @Slf4j
-class SetGenderCommand extends BotCommand {
+class StopCommand extends UserInteractiveBotCommand {
+
     /**
      * Construct a command
      *
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
+     * @param users             users storage
      */
-    public SetGenderCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
+    public StopCommand(String commandIdentifier, String description, Users users) {
+        super(commandIdentifier, description, users);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
-        SendMessage askMessage =
-                SendMessage.builder().text(getMessageText())
-                        .chatId(user.getId())
-                        .replyMarkup(getKeyboard())
-                        .build();
-        try {
-            absSender.execute(askMessage);
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-    }
-
-    protected String getMessageText() {
-        return "Выберите кто вы\uD83D\uDE09, чтобы мы знали, кому вас подставлять в выдачу";
-    }
-
-    protected InlineKeyboardMarkup getKeyboard() {
-        return new MaleFemaleKeyboard();
-    }
-
-    static class MaleFemaleKeyboard extends InlineKeyboardMarkup {
-        private static final InlineKeyboardButton MALE_BUTTON = new InlineKeyboardButton("Парень");
-        private static final InlineKeyboardButton FEMALE_BUTTON = new InlineKeyboardButton("Девушка");
-        private static final List<List<InlineKeyboardButton>> BUTTONS;
-        static {
-            MALE_BUTTON.setCallbackData(KeyboardConstants.SET_MALE_GENDER);
-            FEMALE_BUTTON.setCallbackData(KeyboardConstants.SET_FEMALE_GENDER);
-            BUTTONS = List.of(List.of(MALE_BUTTON, FEMALE_BUTTON));
-        }
-
-        public MaleFemaleKeyboard() {
-            this.setKeyboard(BUTTONS);
-        }
-    }
-}
-
-class SetFindingGenderCommand extends SetGenderCommand {
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public SetFindingGenderCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    protected String getMessageText() {
-        return "Выберите, кого вы хотите искать?";
-    }
-
-    @Override
-    protected InlineKeyboardMarkup getKeyboard() {
-        return new MaleFemaleKeyboard();
-    }
-
-    static class MaleFemaleKeyboard extends InlineKeyboardMarkup {
-        private static final InlineKeyboardButton MALE_BUTTON = new InlineKeyboardButton("Пареней");
-        private static final InlineKeyboardButton FEMALE_BUTTON = new InlineKeyboardButton("Девушек");
-        private static final List<List<InlineKeyboardButton>> BUTTONS;
-        static {
-            MALE_BUTTON.setCallbackData(KeyboardConstants.SET_MALE_FINDING_GENDER);
-            FEMALE_BUTTON.setCallbackData(KeyboardConstants.SET_FEMALE_FINDING_GENDER);
-            BUTTONS = List.of(List.of(MALE_BUTTON, FEMALE_BUTTON));
-        }
-
-        public MaleFemaleKeyboard() {
-            this.setKeyboard(BUTTONS);
-        }
-    }
-}
-
-@Slf4j
-class SetAgeCommand extends BotCommand {
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public SetAgeCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
-        SendMessage askMessage = SendMessage.builder()
-                .chatId(user.getId())
-                .text(getMessageText())
-                .build();
-        try {
-            absSender.execute(askMessage);
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-        Users.waitingMessageEvents.put(user, s -> {
-            try {
-                setAge(Users.properties.get(user), Integer.parseInt(s));
-                SendMessage successMessage = SendMessage.builder()
-                        .chatId(user.getId())
-                        .text("Вы успешно установили возраст" + EmojiConstants.AGE)
-                        .build();
-                absSender.execute(successMessage);
-            } catch (NumberFormatException e) {
-                Reports.reportNotNumber(absSender, user);
-            } catch (NullPointerException e) {
-                Reports.reportEmptyAge(absSender, user);
-            } catch (TelegramApiException e) {
-                log.warn("Не получилось отправить сообщение", e);
-            }
-        });
-    }
-
-    protected String getMessageText() {
-        return "Введите ваш возраст\uD83D\uDE09";
-    }
-
-    protected void setAge(UserProperties properties, int age) {
-        properties.setAge(age);
-    }
-}
-
-class SetMinFindingAgeCommand extends SetAgeCommand {
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public SetMinFindingAgeCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    protected String getMessageText() {
-        return "Введите минимальный возраст для поиска" + EmojiConstants.MIN_FINDING_AGE;
-    }
-
-    protected void setAge(UserProperties properties, int age) {
-        properties.setStartFindingAge(age);
-    }
-}
-
-class SetMaxFindingAgeCommand extends SetAgeCommand {
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public SetMaxFindingAgeCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    protected String getMessageText() {
-        return "Введите максимальный возраст для поиска" + EmojiConstants.MAX_FINDING_AGE;
-    }
-
-    protected void setAge(UserProperties properties, int age) {
-        properties.setEndRequiredAge(age);
-    }
-}
-
-@Slf4j
-class FormCommand extends BotCommand {
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public FormCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
-        UserProperties properties = Users.properties.get(user);
-        SendMessage formMessage = SendMessage.builder()
-                .chatId(user.getId())
-                .text("=== Ваша анкета ===\n\n    Ваш пол: " + Gender.formatToRusString(properties.getGender()) + "  " + EmojiConstants.GENDER +
-                      "\n    Ваш возраст: " + properties.getAge() + " лет  " + EmojiConstants.AGE +
-                      "\n\n===================")
-                .replyMarkup(new PropertiesKeyboard())
-                .build();
-        try {
-            absSender.execute(formMessage);
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-    }
-
-    static class PropertiesKeyboard extends InlineKeyboardMarkup {
-        private static final InlineKeyboardButton GENDER_BUTTON = new InlineKeyboardButton("Изменить свой пол" + EmojiConstants.GENDER);
-        private static final InlineKeyboardButton MY_AGE_BUTTON = new InlineKeyboardButton("Изменить свой возраст" + EmojiConstants.AGE);
-        private static final List<List<InlineKeyboardButton>> BUTTONS;
-        static {
-            GENDER_BUTTON.setCallbackData(KeyboardConstants.SET_GENDER);
-            MY_AGE_BUTTON.setCallbackData(KeyboardConstants.SET_AGE);
-            BUTTONS = List.of(List.of(GENDER_BUTTON),
-                    List.of(MY_AGE_BUTTON));
-        }
-
-        public PropertiesKeyboard() {
-            this.setKeyboard(BUTTONS);
-        }
-    }
-}
-
-@Slf4j
-class FindSettingsCommand extends BotCommand {
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public FindSettingsCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
-        if (Users.properties.get(user).isPremium()) {
-            try {
-                absSender.execute(SendMessage.builder()
-                        .chatId(user.getId())
-                        .text(getForm(Users.properties.get(user)))
-                        .replyMarkup(new PropertiesKeyboard())
-                        .build());
-            } catch (TelegramApiException e) {
-                log.warn("Не получилось отправить сообщение", e);
-            }
-        } else {
-            Reports.reportNeedPremium(absSender, user, "настройкам поиска");
-        }
-    }
-
-    private String getForm(UserProperties properties) {
-        return "=== Настройки поиска ===\n\n    Желаемый пол: " + Gender.formatToRusString(properties.getFindingGender()) + "  " + EmojiConstants.FINDING_GENDER +
-                "\n    Мин. возраст для поиска: " + properties.getStartFindingAge() + " лет  " + EmojiConstants.MIN_FINDING_AGE +
-                "\n    Макс. возраст для поиска: " + properties.getEndRequiredAge() + " лет  " + EmojiConstants.MAX_FINDING_AGE +
-                "\n\n========================";
-    }
-
-    static class PropertiesKeyboard extends InlineKeyboardMarkup {
-        private static final InlineKeyboardButton FIND_GENDER_BUTTON = new InlineKeyboardButton("Желаемый пол" + EmojiConstants.FINDING_GENDER);
-        private static final InlineKeyboardButton FIND_MIN_AGE_BUTTON = new InlineKeyboardButton("Минимальный возраст для поиска" + EmojiConstants.MIN_FINDING_AGE);
-        private static final InlineKeyboardButton FIND_MAX_AGE_BUTTON = new InlineKeyboardButton("Максимальный возраст для поиска" + EmojiConstants.MAX_FINDING_AGE);
-        private static final List<List<InlineKeyboardButton>> BUTTONS;
-        static {
-            FIND_GENDER_BUTTON.setCallbackData(KeyboardConstants.SET_FINDING_GENDER);
-            FIND_MIN_AGE_BUTTON.setCallbackData(KeyboardConstants.SET_MIN_FIND_AGE);
-            FIND_MAX_AGE_BUTTON.setCallbackData(KeyboardConstants.SET_MAX_FIND_AGE);
-            BUTTONS = List.of(List.of(FIND_GENDER_BUTTON),
-                    List.of(FIND_MIN_AGE_BUTTON),
-                    List.of(FIND_MAX_AGE_BUTTON));
-        }
-
-        public PropertiesKeyboard() {
-            this.setKeyboard(BUTTONS);
-        }
-    }
-}
-
-@Slf4j
-class FindCommand extends BotCommand {
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public FindCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+        if (!(users.messages.containsKey(user) || strings != null &&
+                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
         try {
-            if (strings.length > 1) throw new ArrayIndexOutOfBoundsException();
-            User findingUser = findUserForName(strings[0]);
-            if (findingUser == null) throw new NullPointerException();
-            if (Users.pairs.containsKey(user) || Users.pairs.containsKey(findingUser)) {
-                throw new IllegalCallerException();
-            }
-            Users.pairs.put(user, findingUser);
-            Users.pairs.put(findingUser, user);
-            writeAboutConnection(absSender, user, findingUser);
-            writeAboutConnection(absSender, findingUser, user);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            Reports.reportIncorrectNickname(absSender, user, null);
-        } catch (NullPointerException e) {
-            Reports.reportUnregisteredNickname(absSender, user, strings[0]);
-        } catch (IllegalCallerException e) {
-            Reports.reportBusyUser(absSender, user, strings[0]);
-        }
-    }
-
-    private User findUserForName(String userName) {
-        for (User u : Users.messages.keySet()) {
-            if (userName.equals(u.getUserName())) {
-                return u;
-            }
-        }
-        return null;
-    }
-
-    private void writeAboutConnection(AbsSender absSender, User firstUser, User secondUser) {
-        SendMessage errorMessage = SendMessage.builder()
-                .chatId(firstUser.getId())
-                .text("Вы подключились к пользователю " + secondUser.getFirstName() + ")")
-                .build();
-        try {
-            absSender.execute(errorMessage);
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-    }
-}
-
-@Slf4j
-class FindRandomCommand extends BotCommand {
-    private static final int remainSeconds = 60;
-    AbsSender sender;
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public FindRandomCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-
-        new Thread(() -> {
-            while (true) {
-                if (Users.finders.size() > 1) {
-                    sleep(1000/ Users.finders.size());
-                    User firstUser = null;
-                    User secondUser = null;
-                    for (User u1 : Users.finders.keySet()) {
-                        for (User u2 : Users.finders.keySet()) {
-                            if (isGenderCompatible(u1, u2) && isAgeCompatible(u1, u2) && !u1.equals(u2)) {
-                                firstUser = u1;
-                                secondUser = u2;
-                                break;
-                            }
-                        }
-                    }
-                    if (firstUser != null && secondUser != null) {
-                        Users.finders.get(firstUser).cancel();
-                        Users.finders.remove(firstUser);
-                        Users.finders.get(secondUser).cancel();
-                        Users.finders.remove(secondUser);
-                        Users.pairs.put(firstUser, secondUser);
-                        Users.pairs.put(secondUser, firstUser);
-                        writeAboutConnection(sender, firstUser);
-                        writeAboutConnection(sender, secondUser);
-                    }
-                } else {
-                    sleep(1000);
-                }
-            }
-        }).start();
-    }
-
-    private void sleep(long mills) {
-        try {
-            Thread.sleep(mills);
-        } catch (InterruptedException e) {
-            log.error("Поток поиска собеседников прерван во время ожидания!", e);
-        }
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!absSender.equals(sender)) sender = absSender;
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
-        if (Users.finders.containsKey(user)) {
-            Reports.reportWaiting(absSender, user);
-            return;
-        }
-        Users.finders.put(user, new Timer());
-        Users.finders.get(user).schedule(new removeUserTask(user),
-                remainSeconds * 1000);
-        writeAboutSearching(absSender, user);
-    }
-
-    class removeUserTask extends TimerTask {
-        User userToRemove;
-        public removeUserTask(User userToRemove) {
-            this.userToRemove = userToRemove;
-        }
-
-        @Override
-        public void run() {
-            synchronized (Users.finders) {
-                Users.finders.remove(userToRemove);
-                writeAboutRemove(sender, userToRemove);
-            }
-        }
-    }
-
-    private void writeAboutSearching(AbsSender absSender, User user) {
-        SendMessage searchMessage = SendMessage.builder()
-                .chatId(user.getId())
-                .text("Сейчас тебе кого-нибудь подыщем☺\uFE0F")
-                .build();
-        try {
-            absSender.execute(searchMessage);
-            int sendDiceValue = absSender.execute(SendDice.builder().chatId(user.getId()).build()).getDice().getValue();
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-    }
-
-    private void writeAboutRemove(AbsSender absSender, User user) {
-        SendMessage errorMessage = SendMessage.builder()
-                .chatId(user.getId())
-                .text("Извините, " + (Users.properties.get(user).isPremium() ? "по вашим параметрам" : "для вас") +
-                        " никого найти не удалось\uD83D\uDE14, но не расстраивайся, солнышко, ты можешь попробовать еще раз, мы верим в тебя!")
-                .build();
-        try {
-            absSender.execute(errorMessage);
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-    }
-
-    private boolean isGenderCompatible(User firstUser, User secondUser) {
-        HashMap<User, UserProperties> props = Users.properties;
-        if (!props.get(firstUser).isPremium() && !props.get(secondUser).isPremium()) {
-            return true;
-        }
-        boolean isFirstUserSuitableForSecondUser = Gender.equals(
-                props.get(secondUser).getFindingGender(),
-                        props.get(firstUser).getGender());
-        boolean isSecondUserSuitableForFirstUser = Gender.equals(
-                props.get(firstUser).getFindingGender(),
-                        props.get(secondUser).getGender());
-        return isFirstUserSuitableForSecondUser || !props.get(secondUser).isPremium() &&
-                isSecondUserSuitableForFirstUser || !props.get(firstUser).isPremium();
-    }
-
-    private boolean isAgeCompatible(User firstUser, User secondUser) {
-        HashMap<User, UserProperties> props = Users.properties;
-        if (!props.get(firstUser).isPremium() && !props.get(secondUser).isPremium()) {
-            return true;
-        }
-        boolean isFirstUserSuitable =
-                props.get(secondUser).getStartFindingAge() <
-                props.get(firstUser).getAge() &&
-                        props.get(firstUser).getAge() <
-                                props.get(secondUser).getEndRequiredAge();
-        boolean isSecondUserSuitable =
-                props.get(firstUser).getStartFindingAge() <
-                props.get(secondUser).getAge() &&
-                        props.get(secondUser).getAge() <
-                                props.get(firstUser).getEndRequiredAge();
-        return isFirstUserSuitable | !props.get(secondUser).isPremium() &&
-                isSecondUserSuitable | !props.get(firstUser).isPremium();
-    }
-
-    protected void writeAboutConnection(AbsSender absSender, User user) {
-        try {
-            absSender.execute(SendMessage.builder().chatId(user.getId())
-                    .text("Я нашел тебе собеседника! Приятного знакомства)").build());
-            if (UserProperties.isPremiumSystemActive()) {
-                absSender.execute(SendMessage.builder()
-                        .chatId(user.getId())
-                        .text(getForm(Users.properties.get(user).isPremium(), Users.properties.get(Users.pairs.get(user))))
-                        .replyMarkup(new ChatKeyboard()).build());
-            }
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-    }
-
-    private String getForm(boolean canWatch, UserProperties properties) {
-        return "=== Анкета пользователя ===" +
-                "\n\n    Пол собеседника: " + (canWatch ? Gender.formatToRusString(properties.getGender()) : " ----")+
-                "\n    Возраст собеседника: " + (canWatch ? (properties.getAge() == 0 ? "Не указано" : String.valueOf(properties.getAge())) : " ----") +
-                (canWatch ? "\n" : "\n\nЧтобы разблокировать просмотр пола и возраста собеседника нужно стать Premium" + EmojiConstants.PREMIUM) +
-                "\n===========================";
-    }
-}
-
-@Slf4j
-class StopCommand extends BotCommand {
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public StopCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
-        try {
-            User secondUser = Users.pairs.get(user);
+            User secondUser = users.pairs.get(user);
             writeDisconnectMessage(absSender, user, secondUser);
-            Users.pairs.remove(user);
+            users.pairs.remove(user);
             writeDisconnectMessage(absSender, secondUser, user);
-            Users.pairs.remove(secondUser);
+            users.pairs.remove(secondUser);
         } catch (NullPointerException e) {
             Reports.reportUnconnectedWriting(absSender, user);
         }
@@ -966,7 +443,7 @@ class StopCommand extends BotCommand {
     }
 }
 
-class PremiumCommand extends BotCommand {
+class PremiumCommand extends UserInteractiveBotCommand {
 
     /**
      * Construct a command
@@ -974,15 +451,16 @@ class PremiumCommand extends BotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
+     * @param users 			users storage
      */
-    public PremiumCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
+    public PremiumCommand(String commandIdentifier, String description, Users users) {
+        super(commandIdentifier, description, users);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(Users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+        if (!(users.messages.containsKey(user) || strings != null &&
+                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -1042,99 +520,5 @@ class PremiumCommand extends BotCommand {
             }
             this.setKeyboard(BUTTONS);
         }
-    }
-}
-
-@Slf4j
-class HelpCommand extends BotCommand {
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public HelpCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] arguments) {
-        SendMessage help = SendMessage.builder()
-                .text("====== Список всех команд ======" +
-                      "\n\n/start - Запустить бота" + EmojiConstants.START +
-                      "\n/form - Ваша анкета" + EmojiConstants.FORM +
-                      "\n/setage - Установить возраст" + EmojiConstants.AGE +
-                      "\n/setgender - Выбрать пол" + EmojiConstants.GENDER +
-                      "\n/setfindinggender - Указать желаемый пол" + EmojiConstants.FINDING_GENDER +
-                      "\n/setminfindingage - Указать мин. возраст поиска" + EmojiConstants.MIN_FINDING_AGE +
-                      "\n/setmaxfindingage - Указать макс. возраст поиска" + EmojiConstants.MAX_FINDING_AGE +
-                      "\n/random - Найти случайного собеседника" + EmojiConstants.RANDOM +
-                      "\n/stop - Остановить чат" + EmojiConstants.STOP +
-                      "\n/help - Список всех команд" + EmojiConstants.HELP +
-                      "\n\n================================")
-                .chatId(user.getId())
-                .replyMarkup(new DefaultKeyboard())
-                .build();
-        try {
-            absSender.execute(help);
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        }
-    }
-}
-
-class DefaultKeyboard extends ReplyKeyboardMarkup {
-    private static final List<KeyboardRow> keyboard = new ArrayList<>();
-    private static final KeyboardRow firstRow = new KeyboardRow();
-    private static final KeyboardButton randomButton = new KeyboardButton(KeyboardConstants.RANDOM);
-    private static final KeyboardRow secondRow = new KeyboardRow();
-    private static final KeyboardButton formButton = new KeyboardButton(KeyboardConstants.FORM);
-    private static final KeyboardButton settingsButton = new KeyboardButton(KeyboardConstants.SETTINGS);
-    private static final KeyboardRow thirdRow = new KeyboardRow();
-    private static final KeyboardButton premiumButton = new KeyboardButton(KeyboardConstants.PREMIUM);
-
-    static {
-        firstRow.add(randomButton);
-        secondRow.add(formButton);
-        secondRow.add(settingsButton);
-        thirdRow.add(premiumButton);
-        keyboard.add(firstRow);
-        keyboard.add(secondRow);
-        if (UserProperties.isPremiumSystemActive()) {
-            keyboard.add(thirdRow);
-        }
-    }
-
-    {
-        setSelective(true);
-        setResizeKeyboard(true);
-        setOneTimeKeyboard(false);
-    }
-
-    public DefaultKeyboard() {
-        this.setKeyboard(keyboard);
-    }
-}
-
-class ChatKeyboard extends ReplyKeyboardMarkup {
-    private static final List<KeyboardRow> keyboard = new ArrayList<>();
-    private static final KeyboardRow firstRow = new KeyboardRow();
-    private static final KeyboardButton stopButton = new KeyboardButton(KeyboardConstants.STOP);
-
-    static {
-        firstRow.add(stopButton);
-        keyboard.add(firstRow);
-    }
-
-    {
-        setSelective(true);
-        setResizeKeyboard(true);
-        setOneTimeKeyboard(false);
-    }
-
-    public ChatKeyboard() {
-        this.setKeyboard(keyboard);
     }
 }
