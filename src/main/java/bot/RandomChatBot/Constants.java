@@ -26,13 +26,6 @@ enum KeyboardData {
     SET_MAX_FIND_AGE("setMaxFindAge"),
     PREMIUM("Премиум " + Emoji.PREMIUM);
 
-    @Getter
-    private final String data;
-
-    private KeyboardData(String data) {
-        this.data = data;
-    }
-
     private static final Map<String, KeyboardData> LOOKUP_MAP = new HashMap<>();
 
     static {
@@ -41,12 +34,19 @@ enum KeyboardData {
         }
     }
 
+    @Getter
+    private final String data;
+
+    KeyboardData(String data) {
+        this.data = data;
+    }
+
     public static boolean contains(KeyboardData constant) {
         return LOOKUP_MAP.containsValue(constant);
     }
 
     public static boolean contains(String constantValue) {
-       return LOOKUP_MAP.containsKey(constantValue);
+        return LOOKUP_MAP.containsKey(constantValue);
     }
 
     public static KeyboardData getConst(String constantValue) {
@@ -71,6 +71,7 @@ class Emoji {
 
 @Configuration
 class Users {
+    public static final String OVERRIDE = "mne_pohyi";
     public final HashMap<User, List<Message>> messages = new HashMap<>();
     public final HashMap<User, UserProperties> properties = new HashMap<>();
     public final ConcurrentHashMap<User, Timer> finders = new ConcurrentHashMap<>();
@@ -78,7 +79,6 @@ class Users {
     public final HashMap<User, List<User>> friends = new HashMap<>();
     public final HashMap<Long, User> chatIDs = new HashMap<>();
     public final HashMap<User, Consumer<String>> waitingMessageEvents = new HashMap<>();
-    public static final String OVERRIDE = "mne_pohyi";
 
     {
         new Thread(() -> {

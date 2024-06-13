@@ -44,32 +44,19 @@ public class Bot extends TelegramLongPollingCommandBot {
         super(config.getToken());
         this.config = config;
         this.users = users;
-        startCommand = new StartCommand("start", "Запустить бота " + Emoji.START, this.users, this.config);
-        register(startCommand);
-        setGenderCommand = new SetGenderCommand("setgender", "Выбрать пол " + Emoji.GENDER, this.users);
-        register(setGenderCommand);
-        setAgeCommand = new SetAgeCommand("setage", "Установить возраст " + Emoji.AGE, this.users);
-        register(setAgeCommand);
-        setFindingGenderCommand = new SetFindingGenderCommand("setfindinggender", "Указать желаемый пол " + Emoji.FINDING_GENDER, this.users);
-        register(setFindingGenderCommand);
-        setMinFindingAgeCommand = new SetMinFindingAgeCommand("setminfindingage", "Указать мин. возраст поиска " + Emoji.MIN_FINDING_AGE, this.users);
-        register(setMinFindingAgeCommand);
-        setMaxFindingAgeCommand = new SetMaxFindingAgeCommand("setmaxfindingage", "Указать макс. возраст поиска " + Emoji.MAX_FINDING_AGE, this.users);
-        register(setMaxFindingAgeCommand);
-        findCommand = new FindCommand("find", "Найти человека по никнейму)", this.users);
-        register(findCommand);
-        randomCommand = new FindRandomCommand("random", "Найти случайного собеседника " + Emoji.RANDOM, this.users);
-        register(randomCommand);
-        formCommand = new FormCommand("form", "Ваша анкета " + Emoji.FORM, this.users);
-        register(formCommand);
-        findSettingsCommand = new FindSettingsCommand("findsettings", "Настройки поиска " + Emoji.SETTINGS, this.users);
-        register(findSettingsCommand);
-        premiumCommand = new PremiumCommand("premium", "Платная подписка", this.users);
-        register(premiumCommand);
-        stopCommand = new StopCommand("stop", "Остановить чат " + Emoji.STOP, this.users);
-        register(stopCommand);
-        helpCommand = new HelpCommand("help", "Список всех команд " + Emoji.HELP);
-        register(helpCommand);
+        register(startCommand = new StartCommand("start", "Запустить бота " + Emoji.START, this.users, this.config));
+        register(setGenderCommand = new SetGenderCommand("setgender", "Выбрать пол " + Emoji.GENDER, this.users));
+        register(setAgeCommand = new SetAgeCommand("setage", "Установить возраст " + Emoji.AGE, this.users));
+        register(setFindingGenderCommand = new SetFindingGenderCommand("setfindinggender", "Указать желаемый пол " + Emoji.FINDING_GENDER, this.users));
+        register(setMinFindingAgeCommand = new SetMinFindingAgeCommand("setminfindingage", "Указать мин. возраст поиска " + Emoji.MIN_FINDING_AGE, this.users));
+        register(setMaxFindingAgeCommand = new SetMaxFindingAgeCommand("setmaxfindingage", "Указать макс. возраст поиска " + Emoji.MAX_FINDING_AGE, this.users));
+        register(findCommand = new FindCommand("find", "Найти человека по никнейму)", this.users));
+        register(randomCommand = new FindRandomCommand("random", "Найти случайного собеседника " + Emoji.RANDOM, this.users));
+        register(formCommand = new FormCommand("form", "Ваша анкета " + Emoji.FORM, this.users));
+        register(findSettingsCommand = new FindSettingsCommand("findsettings", "Настройки поиска " + Emoji.SETTINGS, this.users));
+        register(premiumCommand = new PremiumCommand("premium", "Платная подписка", this.users));
+        register(stopCommand = new StopCommand("stop", "Остановить чат " + Emoji.STOP, this.users));
+        register(helpCommand = new HelpCommand("help", "Список всех команд " + Emoji.HELP));
         sayAboutStart();
     }
 
@@ -231,11 +218,11 @@ public class Bot extends TelegramLongPollingCommandBot {
                 users.properties.get(user).setGender(Gender.Female);
                 writeAboutSuccessGender(user);
             }
-            case SET_GENDER ->  setGenderCommand
+            case SET_GENDER -> setGenderCommand
                     .execute(this, user, null, null);
             case SET_AGE -> setAgeCommand
                     .execute(this, user, null, null);
-            case SET_FINDING_GENDER ->  setFindingGenderCommand
+            case SET_FINDING_GENDER -> setFindingGenderCommand
                     .execute(this, user, null, null);
             case SET_MALE_FINDING_GENDER -> {
                 users.properties.get(user).setFindingGender(Gender.Male);
@@ -264,7 +251,7 @@ public class Bot extends TelegramLongPollingCommandBot {
             public void run() {
                 users.properties.put(user, new UserProperties());
                 UserProperties currentUserProperties = users.properties.get(user);
-                setGender(user, new String[]{users.OVERRIDE});
+                setGender(user, new String[]{Users.OVERRIDE});
                 do {
                     try {
                         Thread.sleep(500);
@@ -272,7 +259,7 @@ public class Bot extends TelegramLongPollingCommandBot {
                         throw new RuntimeException(e);
                     }
                 } while (currentUserProperties.isGenderNotStated());
-                setAge(user, new String[]{users.OVERRIDE});
+                setAge(user, new String[]{Users.OVERRIDE});
                 do {
                     try {
                         Thread.sleep(500);
@@ -322,6 +309,7 @@ public class Bot extends TelegramLongPollingCommandBot {
 @Slf4j
 class StartCommand extends UserInteractiveBotCommand {
     private final BotConfig config;
+
     /**
      * Construct a command
      *
@@ -363,19 +351,6 @@ class StartCommand extends UserInteractiveBotCommand {
         }
     }
 
-    static class GoKey extends InlineKeyboardMarkup {
-        private final InlineKeyboardButton GO_BUTTON = new InlineKeyboardButton("ПОЕЕЕХАЛИИИИ");
-        private final List<List<InlineKeyboardButton>> BUTTONS;
-        {
-            GO_BUTTON.setCallbackData(KeyboardData.REGISTER_THREAD.getData());
-            BUTTONS = List.of(List.of(GO_BUTTON));
-        }
-
-        public GoKey() {
-            this.setKeyboard(BUTTONS);
-        }
-    }
-
     private void reportRegistration(User user) {
         log.info("Зашел: @" + user.getUserName());
     }
@@ -389,6 +364,20 @@ class StartCommand extends UserInteractiveBotCommand {
             absSender.execute(errorMessage);
         } catch (TelegramApiException e2) {
             log.warn("Не получилось отправить сообщение", e2);
+        }
+    }
+
+    static class GoKey extends InlineKeyboardMarkup {
+        private final InlineKeyboardButton GO_BUTTON = new InlineKeyboardButton("ПОЕЕЕХАЛИИИИ");
+        private final List<List<InlineKeyboardButton>> BUTTONS;
+
+        {
+            GO_BUTTON.setCallbackData(KeyboardData.REGISTER_THREAD.getData());
+            BUTTONS = List.of(List.of(GO_BUTTON));
+        }
+
+        public GoKey() {
+            this.setKeyboard(BUTTONS);
         }
     }
 }
@@ -412,7 +401,7 @@ class StopCommand extends UserInteractiveBotCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -450,7 +439,7 @@ class PremiumCommand extends UserInteractiveBotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users 			users storage
+     * @param users             users storage
      */
     public PremiumCommand(String commandIdentifier, String description, Users users) {
         super(commandIdentifier, description, users);
@@ -459,7 +448,7 @@ class PremiumCommand extends UserInteractiveBotCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }

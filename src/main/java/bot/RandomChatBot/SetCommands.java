@@ -28,7 +28,7 @@ class SetGenderCommand extends UserInteractiveBotCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -56,6 +56,7 @@ class SetGenderCommand extends UserInteractiveBotCommand {
         private static final InlineKeyboardButton MALE_BUTTON = new InlineKeyboardButton("Парень");
         private static final InlineKeyboardButton FEMALE_BUTTON = new InlineKeyboardButton("Девушка");
         private static final List<List<InlineKeyboardButton>> BUTTONS;
+
         static {
             MALE_BUTTON.setCallbackData(KeyboardData.SET_MALE_GENDER.getData());
             FEMALE_BUTTON.setCallbackData(KeyboardData.SET_FEMALE_GENDER.getData());
@@ -95,6 +96,7 @@ class SetFindingGenderCommand extends SetGenderCommand {
         private static final InlineKeyboardButton MALE_BUTTON = new InlineKeyboardButton("Пареней");
         private static final InlineKeyboardButton FEMALE_BUTTON = new InlineKeyboardButton("Девушек");
         private static final List<List<InlineKeyboardButton>> BUTTONS;
+
         static {
             MALE_BUTTON.setCallbackData(KeyboardData.SET_MALE_FINDING_GENDER.getData());
             FEMALE_BUTTON.setCallbackData(KeyboardData.SET_FEMALE_FINDING_GENDER.getData());
@@ -124,7 +126,7 @@ class SetAgeCommand extends UserInteractiveBotCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }

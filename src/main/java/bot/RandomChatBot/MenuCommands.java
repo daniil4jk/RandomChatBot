@@ -29,7 +29,7 @@ class FormCommand extends UserInteractiveBotCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -52,6 +52,7 @@ class FormCommand extends UserInteractiveBotCommand {
         private static final InlineKeyboardButton GENDER_BUTTON = new InlineKeyboardButton("Изменить свой пол" + Emoji.GENDER);
         private static final InlineKeyboardButton MY_AGE_BUTTON = new InlineKeyboardButton("Изменить свой возраст" + Emoji.AGE);
         private static final List<List<InlineKeyboardButton>> BUTTONS;
+
         static {
             GENDER_BUTTON.setCallbackData(KeyboardData.SET_GENDER.getData());
             MY_AGE_BUTTON.setCallbackData(KeyboardData.SET_AGE.getData());
@@ -82,7 +83,7 @@ class FindSettingsCommand extends UserInteractiveBotCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -113,6 +114,7 @@ class FindSettingsCommand extends UserInteractiveBotCommand {
         private static final InlineKeyboardButton FIND_MIN_AGE_BUTTON = new InlineKeyboardButton("Минимальный возраст для поиска" + Emoji.MIN_FINDING_AGE);
         private static final InlineKeyboardButton FIND_MAX_AGE_BUTTON = new InlineKeyboardButton("Максимальный возраст для поиска" + Emoji.MAX_FINDING_AGE);
         private static final List<List<InlineKeyboardButton>> BUTTONS;
+
         static {
             FIND_GENDER_BUTTON.setCallbackData(KeyboardData.SET_FINDING_GENDER.getData());
             FIND_MIN_AGE_BUTTON.setCallbackData(KeyboardData.SET_MIN_FIND_AGE.getData());

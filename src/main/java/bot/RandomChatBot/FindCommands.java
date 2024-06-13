@@ -29,7 +29,7 @@ class FindCommand extends UserInteractiveBotCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -79,6 +79,7 @@ class FindCommand extends UserInteractiveBotCommand {
 class FindRandomCommand extends UserInteractiveBotCommand {
     private static final int remainSeconds = 60;
     AbsSender sender;
+
     /**
      * Construct a command
      *
@@ -92,7 +93,7 @@ class FindRandomCommand extends UserInteractiveBotCommand {
         new Thread(() -> {
             while (true) {
                 if (users.finders.size() > 1) {
-                    sleep(1000/ users.finders.size());
+                    sleep(1000 / users.finders.size());
                     User firstUser = null;
                     User secondUser = null;
                     for (User u1 : users.finders.keySet()) {
@@ -133,7 +134,7 @@ class FindRandomCommand extends UserInteractiveBotCommand {
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!absSender.equals(sender)) sender = absSender;
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -145,21 +146,6 @@ class FindRandomCommand extends UserInteractiveBotCommand {
         users.finders.get(user).schedule(new removeUserTask(user),
                 remainSeconds * 1000);
         writeAboutSearching(absSender, user);
-    }
-
-    class removeUserTask extends TimerTask {
-        User userToRemove;
-        public removeUserTask(User userToRemove) {
-            this.userToRemove = userToRemove;
-        }
-
-        @Override
-        public void run() {
-            synchronized (users.finders) {
-                users.finders.remove(userToRemove);
-                writeAboutRemove(sender, userToRemove);
-            }
-        }
     }
 
     private void writeAboutSearching(AbsSender absSender, User user) {
@@ -239,9 +225,25 @@ class FindRandomCommand extends UserInteractiveBotCommand {
 
     private String getForm(boolean canWatch, UserProperties properties) {
         return "=== Анкета пользователя ===" +
-                "\n\n    Пол собеседника: " + (canWatch ? Gender.formatToRusString(properties.getGender()) : " ----")+
+                "\n\n    Пол собеседника: " + (canWatch ? Gender.formatToRusString(properties.getGender()) : " ----") +
                 "\n    Возраст собеседника: " + (canWatch ? (properties.getAge() == 0 ? "Не указано" : String.valueOf(properties.getAge())) : " ----") +
                 (canWatch ? "\n" : "\n\nЧтобы разблокировать просмотр пола и возраста собеседника нужно стать Premium" + Emoji.PREMIUM) +
                 "\n===========================";
+    }
+
+    class removeUserTask extends TimerTask {
+        User userToRemove;
+
+        public removeUserTask(User userToRemove) {
+            this.userToRemove = userToRemove;
+        }
+
+        @Override
+        public void run() {
+            synchronized (users.finders) {
+                users.finders.remove(userToRemove);
+                writeAboutRemove(sender, userToRemove);
+            }
+        }
     }
 }

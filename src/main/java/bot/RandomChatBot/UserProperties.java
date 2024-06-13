@@ -29,11 +29,12 @@ enum Gender {
 
 @Slf4j
 class UserProperties {
-    @Getter
-    static boolean premiumSystemActive = true;
     private static final Calendar calendar = Calendar.getInstance();
     private static final ArrayList<UserProperties> allProperties = new ArrayList<>();
+    @Getter
+    static boolean premiumSystemActive = true;
     private static Date currentDate = new Date();
+
     static {
         if (premiumSystemActive) {
             new Thread(() -> {
@@ -107,7 +108,7 @@ class UserProperties {
 
     public void setAge(int age) {
         age -= 128;
-        if (age <=127 && age >= -128) {
+        if (age <= 127 && age >= -128) {
             this.age = (byte) age;
         } else {
             throw new IllegalArgumentException();
@@ -135,7 +136,7 @@ class UserProperties {
 
     public void setEndRequiredAge(int endRequiredAge) {
         endRequiredAge -= 128;
-        if (endRequiredAge <=127 && endRequiredAge >= -128) {
+        if (endRequiredAge <= 127 && endRequiredAge >= -128) {
             this.endRequiredAge = (byte) endRequiredAge;
         } else {
             throw new IllegalArgumentException();
