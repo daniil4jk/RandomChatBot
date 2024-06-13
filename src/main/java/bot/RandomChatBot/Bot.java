@@ -1,6 +1,5 @@
 package bot.RandomChatBot;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
@@ -45,31 +44,31 @@ public class Bot extends TelegramLongPollingCommandBot {
         super(config.getToken());
         this.config = config;
         this.users = users;
-        startCommand = new StartCommand("start", "Запустить бота " + EmojiConstants.START, this.users, this.config);
+        startCommand = new StartCommand("start", "Запустить бота " + Emoji.START, this.users, this.config);
         register(startCommand);
-        setGenderCommand = new SetGenderCommand("setgender", "Выбрать пол " + EmojiConstants.GENDER, this.users);
+        setGenderCommand = new SetGenderCommand("setgender", "Выбрать пол " + Emoji.GENDER, this.users);
         register(setGenderCommand);
-        setAgeCommand = new SetAgeCommand("setage", "Установить возраст " + EmojiConstants.AGE, this.users);
+        setAgeCommand = new SetAgeCommand("setage", "Установить возраст " + Emoji.AGE, this.users);
         register(setAgeCommand);
-        setFindingGenderCommand = new SetFindingGenderCommand("setfindinggender", "Указать желаемый пол " + EmojiConstants.FINDING_GENDER, this.users);
+        setFindingGenderCommand = new SetFindingGenderCommand("setfindinggender", "Указать желаемый пол " + Emoji.FINDING_GENDER, this.users);
         register(setFindingGenderCommand);
-        setMinFindingAgeCommand = new SetMinFindingAgeCommand("setminfindingage", "Указать мин. возраст поиска " + EmojiConstants.MIN_FINDING_AGE, this.users);
+        setMinFindingAgeCommand = new SetMinFindingAgeCommand("setminfindingage", "Указать мин. возраст поиска " + Emoji.MIN_FINDING_AGE, this.users);
         register(setMinFindingAgeCommand);
-        setMaxFindingAgeCommand = new SetMaxFindingAgeCommand("setmaxfindingage", "Указать макс. возраст поиска " + EmojiConstants.MAX_FINDING_AGE, this.users);
+        setMaxFindingAgeCommand = new SetMaxFindingAgeCommand("setmaxfindingage", "Указать макс. возраст поиска " + Emoji.MAX_FINDING_AGE, this.users);
         register(setMaxFindingAgeCommand);
         findCommand = new FindCommand("find", "Найти человека по никнейму)", this.users);
         register(findCommand);
-        randomCommand = new FindRandomCommand("random", "Найти случайного собеседника " + EmojiConstants.RANDOM, this.users);
+        randomCommand = new FindRandomCommand("random", "Найти случайного собеседника " + Emoji.RANDOM, this.users);
         register(randomCommand);
-        formCommand = new FormCommand("form", "Ваша анкета " + EmojiConstants.FORM, this.users);
+        formCommand = new FormCommand("form", "Ваша анкета " + Emoji.FORM, this.users);
         register(formCommand);
-        findSettingsCommand = new FindSettingsCommand("findsettings", "Настройки поиска " + EmojiConstants.SETTINGS, this.users);
+        findSettingsCommand = new FindSettingsCommand("findsettings", "Настройки поиска " + Emoji.SETTINGS, this.users);
         register(findSettingsCommand);
         premiumCommand = new PremiumCommand("premium", "Платная подписка", this.users);
         register(premiumCommand);
-        stopCommand = new StopCommand("stop", "Остановить чат " + EmojiConstants.STOP, this.users);
+        stopCommand = new StopCommand("stop", "Остановить чат " + Emoji.STOP, this.users);
         register(stopCommand);
-        helpCommand = new HelpCommand("help", "Список всех команд " + EmojiConstants.HELP);
+        helpCommand = new HelpCommand("help", "Список всех команд " + Emoji.HELP);
         register(helpCommand);
         sayAboutStart();
     }
@@ -93,25 +92,7 @@ public class Bot extends TelegramLongPollingCommandBot {
     @Override
     public void processNonCommandUpdate(Update update) {
         if (update.hasMessage()) {
-            Message message = update.getMessage();
-            if (users.waitingMessageEvents.containsKey(message.getFrom())) {
-                processingMessageEvents(message);
-            } else if (!processingMessageCommands(message)) {
-                if (message.hasText() && users.pairs.containsKey(message.getFrom())) {
-                        copyMessage(update);
-                } else if (message.hasSuccessfulPayment()) {
-                    servePayment(message.getSuccessfulPayment(), message.getFrom());
-                } else if (message.hasDice()) {
-                    troll(message);
-                } else {
-                    Reports.reportUnconnectedWriting(this, message.getFrom());
-                }
-            }
-            if (message.hasPhoto() || message.hasDocument() ||
-                    message.hasVideo() || message.hasAudio() ||
-                    message.hasVoice()) {
-                copyFileToAdminCheck(message);
-            }
+            processingMessage(update.getMessage());
         } else if (update.hasCallbackQuery()) {
             processingCallbackQuery(update.getCallbackQuery());
         } else if (update.hasPreCheckoutQuery()) {
@@ -123,12 +104,33 @@ public class Bot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void copyMessage(Update update) {
-        users.messages.get(update.getMessage().getFrom()).add(update.getMessage());
+    private void processingMessage(Message message) {
+        if (users.waitingMessageEvents.containsKey(message.getFrom())) {
+            processingMessageEvents(message);
+        } else if (message.hasText() && KeyboardData.contains(message.getText())) {
+            processingMessageCommands(message);
+        } else if (message.hasText() && users.pairs.containsKey(message.getFrom())) {
+            copyMessage(message);
+        } else if (message.hasSuccessfulPayment()) {
+            servePayment(message.getSuccessfulPayment(), message.getFrom());
+        } else if (message.hasDice()) {
+            troll(message);
+        } else {
+            Reports.reportUnconnectedWriting(this, message.getFrom());
+        }
+        if (message.hasPhoto() || message.hasDocument() ||
+                message.hasVideo() || message.hasAudio() ||
+                message.hasVoice()) {
+            copyFileToAdminCheck(message);
+        }
+    }
+
+    private void copyMessage(Message message) {
+        users.messages.get(message.getFrom()).add(message);
         CopyMessage m = CopyMessage.builder()
-                .fromChatId(update.getMessage().getChatId())
-                .chatId(users.pairs.get(update.getMessage().getFrom()).getId())
-                .messageId(update.getMessage().getMessageId())
+                .fromChatId(message.getChatId())
+                .chatId(users.pairs.get(message.getFrom()).getId())
+                .messageId(message.getMessageId())
                 .build();
         try {
             execute(m);
@@ -197,60 +199,57 @@ public class Bot extends TelegramLongPollingCommandBot {
         users.properties.get(user).addPremium(Calendar.DATE, days);
     }
 
-    private boolean processingMessageCommands(Message message) {
-        return keyboardSwitch(message.getText(), message.getFrom());
+    private void processingMessageCommands(Message message) {
+        keyboardSwitch(message.getText(), message.getFrom());
     }
 
     private void processingCallbackQuery(CallbackQuery callback) {
         User user = users.chatIDs.get(callback.getMessage().getChatId());
-        if (user == null) return;
+        if (user == null || !KeyboardData.contains(callback.getData())) return;
         keyboardSwitch(callback.getData(), user);
     }
 
-    private boolean keyboardSwitch(String condition, User user) {
+    private void keyboardSwitch(String conditionInString, User user) {
+        KeyboardData condition = KeyboardData.getConst(conditionInString);
         switch (condition) {
-            case KeyboardConstants.REGISTER_THREAD -> createRegThread(user);
-            case KeyboardConstants.RANDOM -> randomCommand
+            case REGISTER_THREAD -> createRegThread(user);
+            case RANDOM -> randomCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.FORM -> formCommand
+            case FORM -> formCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.SETTINGS -> findSettingsCommand
+            case SETTINGS -> findSettingsCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.PREMIUM -> premiumCommand
+            case PREMIUM -> premiumCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.STOP -> stopCommand
+            case STOP -> stopCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.SET_MALE_GENDER -> {
+            case SET_MALE_GENDER -> {
                 users.properties.get(user).setGender(Gender.Male);
                 writeAboutSuccessGender(user);
             }
-            case KeyboardConstants.SET_FEMALE_GENDER -> {
+            case SET_FEMALE_GENDER -> {
                 users.properties.get(user).setGender(Gender.Female);
                 writeAboutSuccessGender(user);
             }
-            case KeyboardConstants.SET_GENDER ->  setGenderCommand
+            case SET_GENDER ->  setGenderCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.SET_AGE -> setAgeCommand
+            case SET_AGE -> setAgeCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.SET_FINDING_GENDER ->  setFindingGenderCommand
+            case SET_FINDING_GENDER ->  setFindingGenderCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.SET_MALE_FINDING_GENDER -> {
+            case SET_MALE_FINDING_GENDER -> {
                 users.properties.get(user).setFindingGender(Gender.Male);
                 writeAboutSuccessGender(user);
             }
-            case KeyboardConstants.SET_FEMALE_FINDING_GENDER -> {
+            case SET_FEMALE_FINDING_GENDER -> {
                 users.properties.get(user).setFindingGender(Gender.Female);
                 writeAboutSuccessGender(user);
             }
-            case KeyboardConstants.SET_MIN_FIND_AGE -> setMinFindingAgeCommand
+            case SET_MIN_FIND_AGE -> setMinFindingAgeCommand
                     .execute(this, user, null, null);
-            case KeyboardConstants.SET_MAX_FIND_AGE -> setMaxFindingAgeCommand
+            case SET_MAX_FIND_AGE -> setMaxFindingAgeCommand
                     .execute(this, user, null, null);
-            default -> {
-                return false;
-            }
         }
-        return true;
     }
 
     private void processingMessageEvents(Message userMessage) {
@@ -310,7 +309,7 @@ public class Bot extends TelegramLongPollingCommandBot {
     private void writeAboutSuccessGender(User user) {
         SendMessage successMessage = SendMessage.builder()
                 .chatId(user.getId())
-                .text("Вы успешно установили пол" + EmojiConstants.GENDER)
+                .text("Вы успешно установили пол" + Emoji.GENDER)
                 .build();
         try {
             execute(successMessage);
@@ -368,7 +367,7 @@ class StartCommand extends UserInteractiveBotCommand {
         private final InlineKeyboardButton GO_BUTTON = new InlineKeyboardButton("ПОЕЕЕХАЛИИИИ");
         private final List<List<InlineKeyboardButton>> BUTTONS;
         {
-            GO_BUTTON.setCallbackData(KeyboardConstants.REGISTER_THREAD);
+            GO_BUTTON.setCallbackData(KeyboardData.REGISTER_THREAD.getData());
             BUTTONS = List.of(List.of(GO_BUTTON));
         }
 

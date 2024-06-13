@@ -1,7 +1,6 @@
 package bot.RandomChatBot;
 
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -58,8 +57,8 @@ class SetGenderCommand extends UserInteractiveBotCommand {
         private static final InlineKeyboardButton FEMALE_BUTTON = new InlineKeyboardButton("Девушка");
         private static final List<List<InlineKeyboardButton>> BUTTONS;
         static {
-            MALE_BUTTON.setCallbackData(KeyboardConstants.SET_MALE_GENDER);
-            FEMALE_BUTTON.setCallbackData(KeyboardConstants.SET_FEMALE_GENDER);
+            MALE_BUTTON.setCallbackData(KeyboardData.SET_MALE_GENDER.getData());
+            FEMALE_BUTTON.setCallbackData(KeyboardData.SET_FEMALE_GENDER.getData());
             BUTTONS = List.of(List.of(MALE_BUTTON, FEMALE_BUTTON));
         }
 
@@ -97,8 +96,8 @@ class SetFindingGenderCommand extends SetGenderCommand {
         private static final InlineKeyboardButton FEMALE_BUTTON = new InlineKeyboardButton("Девушек");
         private static final List<List<InlineKeyboardButton>> BUTTONS;
         static {
-            MALE_BUTTON.setCallbackData(KeyboardConstants.SET_MALE_FINDING_GENDER);
-            FEMALE_BUTTON.setCallbackData(KeyboardConstants.SET_FEMALE_FINDING_GENDER);
+            MALE_BUTTON.setCallbackData(KeyboardData.SET_MALE_FINDING_GENDER.getData());
+            FEMALE_BUTTON.setCallbackData(KeyboardData.SET_FEMALE_FINDING_GENDER.getData());
             BUTTONS = List.of(List.of(MALE_BUTTON, FEMALE_BUTTON));
         }
 
@@ -143,7 +142,7 @@ class SetAgeCommand extends UserInteractiveBotCommand {
                 setAge(users.properties.get(user), Integer.parseInt(s));
                 SendMessage successMessage = SendMessage.builder()
                         .chatId(user.getId())
-                        .text("Вы успешно установили возраст" + EmojiConstants.AGE)
+                        .text("Вы успешно установили возраст" + Emoji.AGE)
                         .build();
                 absSender.execute(successMessage);
             } catch (NumberFormatException e) {
@@ -179,7 +178,7 @@ class SetMinFindingAgeCommand extends SetAgeCommand {
     }
 
     protected String getMessageText() {
-        return "Введите минимальный возраст для поиска" + EmojiConstants.MIN_FINDING_AGE;
+        return "Введите минимальный возраст для поиска" + Emoji.MIN_FINDING_AGE;
     }
 
     protected void setAge(UserProperties properties, int age) {
@@ -201,7 +200,7 @@ class SetMaxFindingAgeCommand extends SetAgeCommand {
     }
 
     protected String getMessageText() {
-        return "Введите максимальный возраст для поиска" + EmojiConstants.MAX_FINDING_AGE;
+        return "Введите максимальный возраст для поиска" + Emoji.MAX_FINDING_AGE;
     }
 
     protected void setAge(UserProperties properties, int age) {

@@ -1,7 +1,6 @@
 package bot.RandomChatBot;
 
 import lombok.extern.slf4j.Slf4j;
-import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendDice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
@@ -90,7 +89,6 @@ class FindRandomCommand extends UserInteractiveBotCommand {
      */
     public FindRandomCommand(String commandIdentifier, String description, Users users) {
         super(commandIdentifier, description, users);
-
         new Thread(() -> {
             while (true) {
                 if (users.finders.size() > 1) {
@@ -243,7 +241,7 @@ class FindRandomCommand extends UserInteractiveBotCommand {
         return "=== Анкета пользователя ===" +
                 "\n\n    Пол собеседника: " + (canWatch ? Gender.formatToRusString(properties.getGender()) : " ----")+
                 "\n    Возраст собеседника: " + (canWatch ? (properties.getAge() == 0 ? "Не указано" : String.valueOf(properties.getAge())) : " ----") +
-                (canWatch ? "\n" : "\n\nЧтобы разблокировать просмотр пола и возраста собеседника нужно стать Premium" + EmojiConstants.PREMIUM) +
+                (canWatch ? "\n" : "\n\nЧтобы разблокировать просмотр пола и возраста собеседника нужно стать Premium" + Emoji.PREMIUM) +
                 "\n===========================";
     }
 }

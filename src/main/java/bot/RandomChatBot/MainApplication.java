@@ -51,68 +51,6 @@ class Initializer {
     }
 }
 
-@Configuration
-class Users {
-	final HashMap<User, List<Message>> messages = new HashMap<>();
-	final HashMap<User, UserProperties> properties = new HashMap<>();
-	final ConcurrentHashMap<User, Timer> finders = new ConcurrentHashMap<>();
-	final ConcurrentHashMap<User, User> pairs = new ConcurrentHashMap<>();
-	final HashMap<User, List<User>> friends = new HashMap<>();
-	final HashMap<Long, User> chatIDs = new HashMap<>();
-	final HashMap<User, Consumer<String>> waitingMessageEvents = new HashMap<>();
-	final String OVERRIDE = "mne_pohyi";
-
-	{
-		new Thread(() -> {
-			final Scanner sc = new Scanner(System.in);
-			while (true) {
-				String input = sc.nextLine();
-				switch (input) {
-					case "/getUsers" -> {
-						System.out.println("Количество зарегистрированных пользователей: " + finders.size());
-						for (User u : messages.keySet()) {
-							System.out.println(u);
-						}
-					}
-					case "/getFinders" -> {
-						System.out.println("Количество ищущих: " + finders.size());
-						for (User u : finders.keySet()) {
-							System.out.println(u);
-						}
-					}
-					case "/getFindersCount" -> System.out.println("Количество ищущих: " + finders.size());
-					case "/getCommunicating" -> {
-						System.out.println("Количество общающихся: " + pairs.size());
-						for (User u : pairs.keySet()) {
-							System.out.println(u);
-						}
-					}
-					case "/getCommunicatingCount" -> System.out.println("Количество общающихся: " + pairs.size());
-					case "/getActiveUsers" -> {
-						System.out.println("Количество активных пользователей: " + (finders.size() + pairs.size()));
-						for (User u : finders.keySet()) {
-							System.out.println(u);
-						}
-						for (User u : pairs.keySet()) {
-							System.out.println(u);
-						}
-					}
-					case "/getProperties" -> {
-						System.out.println("Количество пользователей имеющих характеристики " + properties.size());
-						for (Map.Entry<User, UserProperties> entry : properties.entrySet()) {
-							System.out.println(entry.getKey());
-							UserProperties v = entry.getValue();
-							System.out.println("Лет: " + v.getAge() + " Пол: " + Gender.formatToRusString(v.getGender()) +
-											   " Ищет от " + v.getStartFindingAge() + " до " + v.getEndRequiredAge() + " лет Искомый пол:" +
-											   Gender.formatToRusString(v.getFindingGender()));
-						}
-					}
-				}
-			}
-		}).start();
-	}
-}
-
 abstract class UserInteractiveBotCommand extends BotCommand {
 	protected final Users users;
 	/**

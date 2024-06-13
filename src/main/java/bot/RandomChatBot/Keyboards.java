@@ -10,12 +10,12 @@ import java.util.List;
 class DefaultKeyboard extends ReplyKeyboardMarkup {
     private static final List<KeyboardRow> keyboard = new ArrayList<>();
     private static final KeyboardRow firstRow = new KeyboardRow();
-    private static final KeyboardButton randomButton = new KeyboardButton(KeyboardConstants.RANDOM);
+    private static final KeyboardButton randomButton = new KeyboardButton(KeyboardData.RANDOM.getData());
     private static final KeyboardRow secondRow = new KeyboardRow();
-    private static final KeyboardButton formButton = new KeyboardButton(KeyboardConstants.FORM);
-    private static final KeyboardButton settingsButton = new KeyboardButton(KeyboardConstants.SETTINGS);
+    private static final KeyboardButton formButton = new KeyboardButton(KeyboardData.FORM.getData());
+    private static final KeyboardButton settingsButton = new KeyboardButton(KeyboardData.SETTINGS.getData());
     private static final KeyboardRow thirdRow = new KeyboardRow();
-    private static final KeyboardButton premiumButton = new KeyboardButton(KeyboardConstants.PREMIUM);
+    private static final KeyboardButton premiumButton = new KeyboardButton(KeyboardData.PREMIUM.getData());
 
     static {
         firstRow.add(randomButton);
@@ -43,9 +43,9 @@ class DefaultKeyboard extends ReplyKeyboardMarkup {
 class ChatKeyboard extends ReplyKeyboardMarkup {
     private static final List<KeyboardRow> keyboard = new ArrayList<>();
     private static final KeyboardRow firstRow = new KeyboardRow();
-    private static final KeyboardButton stopButton = new KeyboardButton(KeyboardConstants.STOP);
+    private static final KeyboardButton stopButton = new KeyboardButton(KeyboardData.STOP.getData());
     private static final KeyboardRow secondRow = new KeyboardRow();
-    private static final KeyboardButton friendButton = new KeyboardButton(KeyboardConstants.STOP);
+    private static final KeyboardButton friendButton = new KeyboardButton(KeyboardData.STOP.getData());
 
     static {
         firstRow.add(stopButton);
