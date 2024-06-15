@@ -1,5 +1,7 @@
 package bot.RandomChatBot;
 
+import bot.RandomChatBot.service.UserService;
+import bot.RandomChatBot.models.UserProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendDice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -20,16 +22,15 @@ class FindCommand extends UserInteractiveBotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public FindCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public FindCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -86,10 +87,9 @@ class FindRandomCommand extends UserInteractiveBotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public FindRandomCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public FindRandomCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
         new Thread(() -> {
             while (true) {
                 if (users.finders.size() > 1) {
@@ -134,7 +134,7 @@ class FindRandomCommand extends UserInteractiveBotCommand {
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!absSender.equals(sender)) sender = absSender;
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }

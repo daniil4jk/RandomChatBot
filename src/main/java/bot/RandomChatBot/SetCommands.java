@@ -1,5 +1,7 @@
 package bot.RandomChatBot;
 
+import bot.RandomChatBot.models.UserProperties;
+import bot.RandomChatBot.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
@@ -19,16 +21,15 @@ class SetGenderCommand extends UserInteractiveBotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public SetGenderCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public SetGenderCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -76,10 +77,9 @@ class SetFindingGenderCommand extends SetGenderCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public SetFindingGenderCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public SetFindingGenderCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     @Override
@@ -117,16 +117,15 @@ class SetAgeCommand extends UserInteractiveBotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public SetAgeCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public SetAgeCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -173,10 +172,9 @@ class SetMinFindingAgeCommand extends SetAgeCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public SetMinFindingAgeCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public SetMinFindingAgeCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     protected String getMessageText() {
@@ -195,10 +193,9 @@ class SetMaxFindingAgeCommand extends SetAgeCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public SetMaxFindingAgeCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public SetMaxFindingAgeCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     protected String getMessageText() {

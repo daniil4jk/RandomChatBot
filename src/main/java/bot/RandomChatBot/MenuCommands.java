@@ -1,5 +1,7 @@
 package bot.RandomChatBot;
 
+import bot.RandomChatBot.models.UserProperties;
+import bot.RandomChatBot.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -20,16 +22,15 @@ class FormCommand extends UserInteractiveBotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public FormCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public FormCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
@@ -74,16 +75,15 @@ class FindSettingsCommand extends UserInteractiveBotCommand {
      * @param commandIdentifier the unique identifier of this command (e.g. the command string to
      *                          enter into chat)
      * @param description       the description of this command
-     * @param users             users storage
      */
-    public FindSettingsCommand(String commandIdentifier, String description, Users users) {
-        super(commandIdentifier, description, users);
+    public FindSettingsCommand(String commandIdentifier, String description) {
+        super(commandIdentifier, description);
     }
 
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && Users.OVERRIDE.equals(strings[0]))) {
+                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, user.getId());
             return;
         }
