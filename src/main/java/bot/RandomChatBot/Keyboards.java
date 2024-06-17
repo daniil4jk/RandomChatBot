@@ -25,7 +25,7 @@ class DefaultKeyboard extends ReplyKeyboardMarkup {
         thirdRow.add(premiumButton);
         keyboard.add(firstRow);
         keyboard.add(secondRow);
-        if (UserProperties.isPremiumSystemActive()) {
+        if (UserProperties.premiumSystemActive) {
             keyboard.add(thirdRow);
         }
     }

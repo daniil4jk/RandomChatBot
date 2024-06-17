@@ -37,7 +37,7 @@ class FormCommand extends UserInteractiveBotCommand {
         UserProperties properties = users.properties.get(user);
         SendMessage formMessage = SendMessage.builder()
                 .chatId(user.getId())
-                .text("=== Ваша анкета ===\n\n    Ваш пол: " + Gender.formatToRusString(properties.getGender()) + "  " + Emoji.GENDER +
+                .text("=== Ваша анкета ===\n\n    Ваш пол: " + Gender.getRusString(properties.getGender()) + "  " + Emoji.GENDER +
                         "\n    Ваш возраст: " + properties.getAge() + " лет  " + Emoji.AGE +
                         "\n\n===================")
                 .replyMarkup(new PropertiesKeyboard())
@@ -103,7 +103,7 @@ class FindSettingsCommand extends UserInteractiveBotCommand {
     }
 
     private String getForm(UserProperties properties) {
-        return "=== Настройки поиска ===\n\n    Желаемый пол: " + Gender.formatToRusString(properties.getFindingGender()) + "  " + Emoji.FINDING_GENDER +
+        return "=== Настройки поиска ===\n\n    Желаемый пол: " + Gender.getRusString(properties.getFindingGender()) + "  " + Emoji.FINDING_GENDER +
                 "\n    Мин. возраст для поиска: " + properties.getStartFindingAge() + " лет  " + Emoji.MIN_FINDING_AGE +
                 "\n    Макс. возраст для поиска: " + properties.getEndRequiredAge() + " лет  " + Emoji.MAX_FINDING_AGE +
                 "\n\n========================";

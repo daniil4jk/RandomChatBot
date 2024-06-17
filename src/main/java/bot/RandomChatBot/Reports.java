@@ -125,4 +125,16 @@ class Reports {
             log.warn("Не получилось отправить сообщение", e2);
         }
     }
+
+    public static void reportGroupWriting(AbsSender absSender, long chatId) {
+        try {
+            absSender.execute(SendMessage.builder()
+                    .chatId(chatId)
+                    .text("Наш бот гарантирует, что с каждым пользователем одновременно на линии будет только 1 пользователь, поэтому прейдите, пожалуйста, в личный чат, буду ждать вас там (если очень хочется пообщаться вдвоем с кем-то, то можете зайти с одного аккаунта, но если что - мы осуждаем такое\uD83D\uDE09)")
+                    .build());
+        } catch (TelegramApiException e2) {
+            log.warn("Не получилось отправить сообщение", e2);
+        }
+    }
+
 }

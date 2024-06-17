@@ -1,8 +1,8 @@
 package bot.RandomChatBot;
 
 public enum Gender {
-    Female,
-    Male,
+    Girl,
+    Boy,
     NotStated;
 
     public static boolean equals(Gender g, Gender g2) {
@@ -10,10 +10,10 @@ public enum Gender {
         return g.equals(g2);
     }
 
-    public static String formatToRusString(Gender gender) {
+    public static String getRusString(Gender gender) {
         return switch (gender) {
-            case Female -> "Женский";
-            case Male -> "Мужской";
+            case Girl -> "Женский";
+            case Boy -> "Мужской";
             case NotStated -> "Не указан";
         };
     }

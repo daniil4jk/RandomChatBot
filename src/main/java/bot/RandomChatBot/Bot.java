@@ -19,7 +19,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -94,6 +93,9 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void processingMessage(Message message) {
+        if (!message.getFrom().getId().equals(message.getChatId())) {
+            Reports.reportGroupWriting(this, message.getChatId());
+        }
         if (users.waitingMessageEvents.containsKey(message.getFrom())) {
             processingMessageEvents(message);
         } else if (message.hasText() && KeyboardData.contains(message.getText())) {
@@ -145,7 +147,7 @@ public class Bot extends TelegramLongPollingCommandBot {
                     .messageId(message.getMessageId())
                     .caption("От: @" + message.getFrom().getUserName() +
                             "\nС UserID: " + message.getFrom().getId() +
-                            "\nПола: " + Gender.formatToRusString(userProperties.getGender()) +
+                            "\nПола: " + Gender.getRusString(userProperties.getGender()) +
                             "\nВозраста: " + userProperties.getAge() +
                             "\nID файла: " + fileID)
                     .build();
@@ -189,49 +191,49 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void processingMessageCommands(Message message) {
-        keyboardSwitch(message.getText(), message.getFrom());
+        keyboardSwitch(message.getText(), message.getFrom(), message.getChat());
     }
 
     private void processingCallbackQuery(CallbackQuery callback) {
         User user = users.chatIDs.get(callback.getMessage().getChatId());
         if (user == null || !KeyboardData.contains(callback.getData())) return;
-        keyboardSwitch(callback.getData(), user);
+        keyboardSwitch(callback.getData(), user, null);
     }
 
-    private void keyboardSwitch(String conditionInString, User user) {
+    private void keyboardSwitch(String conditionInString, User user, Chat chat) {
         KeyboardData condition = KeyboardData.getConst(conditionInString);
         switch (condition) {
             case REGISTER_THREAD -> createRegThread(user);
             case RANDOM -> randomCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case FORM -> formCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case SETTINGS -> findSettingsCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case PREMIUM -> premiumCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case STOP -> stopCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case SET_MALE_GENDER -> {
-                users.properties.get(user).setGender(Gender.Male);
+                users.properties.get(user).setGender(Gender.Boy);
                 writeAboutSuccessGender(user);
             }
             case SET_FEMALE_GENDER -> {
-                users.properties.get(user).setGender(Gender.Female);
+                users.properties.get(user).setGender(Gender.Girl);
                 writeAboutSuccessGender(user);
             }
             case SET_GENDER -> setGenderCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case SET_AGE -> setAgeCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case SET_FINDING_GENDER -> setFindingGenderCommand
-                    .execute(this, user, null, null);
+                    .execute(this, user, chat, null);
             case SET_MALE_FINDING_GENDER -> {
-                users.properties.get(user).setFindingGender(Gender.Male);
+                users.properties.get(user).setFindingGender(Gender.Boy);
                 writeAboutSuccessGender(user);
             }
             case SET_FEMALE_FINDING_GENDER -> {
-                users.properties.get(user).setFindingGender(Gender.Female);
+                users.properties.get(user).setFindingGender(Gender.Girl);
                 writeAboutSuccessGender(user);
             }
             case SET_MIN_FIND_AGE -> setMinFindingAgeCommand

@@ -1,14 +1,9 @@
 package bot.RandomChatBot;
 
 import lombok.Getter;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.User;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.Map;
 
 enum KeyboardData {
     REGISTER_THREAD("regThread"),

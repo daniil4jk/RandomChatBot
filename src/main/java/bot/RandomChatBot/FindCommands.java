@@ -1,7 +1,7 @@
 package bot.RandomChatBot;
 
-import bot.RandomChatBot.service.UserService;
 import bot.RandomChatBot.models.UserProperties;
+import bot.RandomChatBot.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.methods.send.SendDice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -212,7 +212,7 @@ class FindRandomCommand extends UserInteractiveBotCommand {
         try {
             absSender.execute(SendMessage.builder().chatId(user.getId())
                     .text("Я нашел тебе собеседника! Приятного знакомства)").build());
-            if (UserProperties.isPremiumSystemActive()) {
+            if (UserProperties.premiumSystemActive) {
                 absSender.execute(SendMessage.builder()
                         .chatId(user.getId())
                         .text(getForm(users.properties.get(user).isPremium(), users.properties.get(users.pairs.get(user))))
@@ -225,7 +225,7 @@ class FindRandomCommand extends UserInteractiveBotCommand {
 
     private String getForm(boolean canWatch, UserProperties properties) {
         return "=== Анкета пользователя ===" +
-                "\n\n    Пол собеседника: " + (canWatch ? Gender.formatToRusString(properties.getGender()) : " ----") +
+                "\n\n    Пол собеседника: " + (canWatch ? Gender.getRusString(properties.getGender()) : " ----") +
                 "\n    Возраст собеседника: " + (canWatch ? (properties.getAge() == 0 ? "Не указано" : String.valueOf(properties.getAge())) : " ----") +
                 (canWatch ? "\n" : "\n\nЧтобы разблокировать просмотр пола и возраста собеседника нужно стать Premium" + Emoji.PREMIUM) +
                 "\n===========================";

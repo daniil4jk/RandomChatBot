@@ -5,8 +5,8 @@ import bot.RandomChatBot.Gender;
 import bot.RandomChatBot.models.UserProperties;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Chat;
-import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +26,7 @@ public class UserService {
     public void addUser(User user, Chat chat) {
         chatIDs.put(chat.getId(), user);
         messages.put(user, new ArrayList<>());
-        properties.put(user, new UserProperties());
+        properties.put(user, new UserProperties(user.getId()));
     }
 
     {
@@ -70,9 +70,9 @@ public class UserService {
                             for (Map.Entry<User, UserProperties> entry : properties.entrySet()) {
                                 System.out.println(entry.getKey());
                                 UserProperties v = entry.getValue();
-                                System.out.println("Лет: " + v.getAge() + " Пол: " + Gender.formatToRusString(v.getGender()) +
+                                System.out.println("Лет: " + v.getAge() + " Пол: " + Gender.getRusString(v.getGender()) +
                                         " Ищет от " + v.getStartFindingAge() + " до " + v.getEndRequiredAge() + " лет Искомый пол:" +
-                                        Gender.formatToRusString(v.getFindingGender()));
+                                        Gender.getRusString(v.getFindingGender()));
                             }
                         }
                     }

@@ -1,6 +1,11 @@
 package bot.RandomChatBot.models;
 
 import bot.RandomChatBot.Gender;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +15,14 @@ import java.util.Calendar;
 import java.util.Date;
 
 @Slf4j
+@Getter
+@Setter
+@AllArgsConstructor
+@Table(name = "properties")
 public class UserProperties {
     private static final ArrayList<UserProperties> allProperties = new ArrayList<>();
     @Getter
-    static boolean premiumSystemActive = true;
+    public static final boolean premiumSystemActive = true;
     private static Date currentDate = new Date();
 
     static {
@@ -35,19 +44,23 @@ public class UserProperties {
             }).start();
         }
     }
-    private Integer id;
+
+    @Id
+    private Long id;
 
     private Date endPremium;
-    @Getter
     private boolean premium = !premiumSystemActive;
-    @Getter
+    @Enumerated(EnumType.STRING)
     private Gender gender = Gender.NotStated;
-    @Getter
-    @Setter
+    @Enumerated(EnumType.STRING)
     private Gender findingGender = Gender.NotStated;
     private byte age = 0;
     private byte startFindingAge = -128;
     private byte endRequiredAge = 127;
+
+    public UserProperties(Long userID) {
+        this.id = userID;
+    }
 
     public void addPremium(int field, int amount) {
         Calendar calendar = Calendar.getInstance();
@@ -70,13 +83,6 @@ public class UserProperties {
             throw new IllegalArgumentException("Пол не может быть пуст");
         }
         this.gender = gender;
-    }
-
-    public boolean isGirl() {
-        if (gender.equals(Gender.NotStated)) {
-            throw new IllegalArgumentException("Пол не может быть пуст");
-        }
-        return gender == Gender.Female;
     }
 
     public int getAge() {
