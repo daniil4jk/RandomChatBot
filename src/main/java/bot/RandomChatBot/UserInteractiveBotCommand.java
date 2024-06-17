@@ -20,7 +20,11 @@ public abstract class UserInteractiveBotCommand extends BotCommand {
      */
     public UserInteractiveBotCommand(String commandIdentifier, String description) {
         super(commandIdentifier, description);
-        this.users = ApplicationContextProvider.getApplicationContext().getBean(UserService.class);
+        if (ApplicationContextProvider.getApplicationContext() != null) {
+            this.users = ApplicationContextProvider.getApplicationContext().getBean(UserService.class);
+        } else {
+            this.users = new UserService();
+        }
     }
 }
 
