@@ -1,10 +1,14 @@
 package bot.RandomChatBot.service;
 
 
-import bot.RandomChatBot.Gender;
+import bot.RandomChatBot.BackupMap;
 import bot.RandomChatBot.models.UserProperties;
-import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Chat;
+import bot.RandomChatBot.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.User;
 
@@ -12,73 +16,95 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-@Component
+@Service
+@Slf4j
 public class UserService {
-    public static final String OVERRIDE = "mne_pohyi";
-    public final HashMap<User, List<Message>> messages = new HashMap<>();
-    public final HashMap<User, UserProperties> properties = new HashMap<>();
-    public final ConcurrentHashMap<User, Timer> finders = new ConcurrentHashMap<>();
-    public final ConcurrentHashMap<User, User> pairs = new ConcurrentHashMap<>();
-    public final HashMap<User, List<User>> friends = new HashMap<>();
-    public final HashMap<Long, User> chatIDs = new HashMap<>();
-    public final HashMap<User, Consumer<String>> waitingMessageEvents = new HashMap<>();
+    public static final String OVERRIDE = "override";
+    private final ConcurrentHashMap<Long, UserProperties> propertiesMap = new ConcurrentHashMap<>();
+    private final BackupMap<Long, UserProperties>
+            copyOfPropertiesMap = new BackupUserPropertiesMap(propertiesMap);
+    private final UserRepository userRepository;
+    public final ConcurrentHashMap<Long, Timer> finders = new ConcurrentHashMap<>();
+    public final ConcurrentHashMap<Long, Long> pairs = new ConcurrentHashMap<>();
+    public final HashMap<Long, Consumer<Message>> waitingMessageEvents = new HashMap<>();
+    public final HashMap<Long, User> UIDs = new HashMap<>();
 
-    public void addUser(User user, Chat chat) {
-        chatIDs.put(chat.getId(), user);
-        messages.put(user, new ArrayList<>());
-        properties.put(user, new UserProperties(user.getId()));
+    @PostConstruct
+    private void createUpdateRepositoryThread() {
+        new Thread(() -> {
+            while (true) {
+                final boolean[] needRefresh = {false};
+                copyOfPropertiesMap.checkForEquals(v -> {
+                    userRepository.save(v);
+                    needRefresh[0] = true;
+                });
+                if (needRefresh[0]) {
+                    log.debug("Изменения сохранены");
+                    copyOfPropertiesMap.refresh();
+                }
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 
-    {
-        try {
-            new Thread(() -> {
-                final Scanner sc = new Scanner(System.in);
-                while (true) {
-                    String input = sc.nextLine();
-                    switch (input) {
-                        case "/getUsers" -> {
-                            System.out.println("Количество зарегистрированных пользователей: " + finders.size());
-                            for (User u : messages.keySet()) {
-                                System.out.println(u);
-                            }
-                        }
-                        case "/getFinders" -> {
-                            System.out.println("Количество ищущих: " + finders.size());
-                            for (User u : finders.keySet()) {
-                                System.out.println(u);
-                            }
-                        }
-                        case "/getFindersCount" -> System.out.println("Количество ищущих: " + finders.size());
-                        case "/getCommunicating" -> {
-                            System.out.println("Количество общающихся: " + pairs.size());
-                            for (User u : pairs.keySet()) {
-                                System.out.println(u);
-                            }
-                        }
-                        case "/getCommunicatingCount" -> System.out.println("Количество общающихся: " + pairs.size());
-                        case "/getActiveUsers" -> {
-                            System.out.println("Количество активных пользователей: " + (finders.size() + pairs.size()));
-                            for (User u : finders.keySet()) {
-                                System.out.println(u);
-                            }
-                            for (User u : pairs.keySet()) {
-                                System.out.println(u);
-                            }
-                        }
-                        case "/getProperties" -> {
-                            System.out.println("Количество пользователей имеющих характеристики " + properties.size());
-                            for (Map.Entry<User, UserProperties> entry : properties.entrySet()) {
-                                System.out.println(entry.getKey());
-                                UserProperties v = entry.getValue();
-                                System.out.println("Лет: " + v.getAge() + " Пол: " + Gender.getRusString(v.getGender()) +
-                                        " Ищет от " + v.getStartFindingAge() + " до " + v.getEndRequiredAge() + " лет Искомый пол:" +
-                                        Gender.getRusString(v.getFindingGender()));
-                            }
-                        }
-                    }
-                }
-            }).start();
-        } catch (NoSuchElementException ignored) {
+    @Autowired
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public void addUser(long chatID) {
+        propertiesMap.put(chatID, new UserProperties(chatID));
+    }
+
+    public UserProperties getProperties(Long UID) {
+        if (propertiesMap.containsKey(UID)) {
+            return propertiesMap.get(UID);
         }
+        var properties = userRepository.findById(UID).orElseThrow();
+        propertiesMap.put(UID, properties);
+        copyOfPropertiesMap.putCopy(UID, properties);
+        return properties;
+    }
+
+    public boolean exist(long UID) {
+        try {
+            getProperties(UID);
+            return true;
+        } catch (NoSuchElementException e) {
+            return false;
+        }
+    }
+
+    public UserProperties getPropertiesByUserName(String userName) {
+        return userRepository.findByUserName(userName).orElseThrow();
+    }
+
+    @PreDestroy
+    public void saveAll() {
+        System.out.println("DESTROY");
+        for (UserProperties p : propertiesMap.values()) {
+            userRepository.save(p);
+            System.out.println("SAVING: " + p);
+        }
+    }
+}
+
+class BackupUserPropertiesMap extends BackupMap<Long, UserProperties> {
+    public BackupUserPropertiesMap(Map<Long, UserProperties> originalMap) {
+        super(originalMap);
+    }
+
+    @Override
+    public UserProperties cloneOriginalObject(UserProperties originalObject) {
+        return new UserProperties(originalObject.getID(), originalObject.isRegistred(),
+                originalObject.getUserName(), originalObject.getEndPremium(),
+                originalObject.isPremium(), originalObject.getGender(),
+                originalObject.getFindingGender(), originalObject.getAge(),
+                originalObject.getStartFindingAge(), originalObject.getEndRequiredAge(),
+                originalObject.getMessages(), originalObject.getFriends());
     }
 }

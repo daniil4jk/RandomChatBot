@@ -1,26 +1,28 @@
 package bot.RandomChatBot;
 
+import bot.RandomChatBot.Commands.*;
+import bot.RandomChatBot.Constants.Emoji;
+import bot.RandomChatBot.Constants.Gender;
+import bot.RandomChatBot.Keyboards.KeyboardData;
+import bot.RandomChatBot.service.BotConfig;
 import bot.RandomChatBot.models.UserProperties;
 import bot.RandomChatBot.service.UserService;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.LazyInitializationException;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.AnswerPreCheckoutQuery;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
-import org.telegram.telegrambots.meta.api.methods.invoices.CreateInvoiceLink;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.*;
-import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.api.objects.payments.SuccessfulPayment;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.Calendar;
-import java.util.List;
+
+import static bot.RandomChatBot.service.UserService.OVERRIDE;
 
 @Slf4j
 @Component
@@ -45,8 +47,8 @@ public class Bot extends TelegramLongPollingCommandBot {
         super(config.getToken());
         this.config = config;
         this.users = users;
-        register(startCommand = new StartCommand("start", "Запустить бота " + Emoji.START, this.config));
         register(setGenderCommand = new SetGenderCommand("setgender", "Выбрать пол " + Emoji.GENDER));
+        register(startCommand = new StartCommand("start", "Запустить бота " + Emoji.START, this.config, setGenderCommand));
         register(setAgeCommand = new SetAgeCommand("setage", "Установить возраст " + Emoji.AGE));
         register(setFindingGenderCommand = new SetFindingGenderCommand("setfindinggender", "Указать желаемый пол " + Emoji.FINDING_GENDER));
         register(setMinFindingAgeCommand = new SetMinFindingAgeCommand("setminfindingage", "Указать мин. возраст поиска " + Emoji.MIN_FINDING_AGE));
@@ -85,7 +87,7 @@ public class Bot extends TelegramLongPollingCommandBot {
             processingCallbackQuery(update.getCallbackQuery());
         } else if (update.hasPreCheckoutQuery()) {
             try {
-                execute(new AnswerPreCheckoutQuery(update.getPreCheckoutQuery().getId(), true, "ВСЕ ОК"));
+                execute(new AnswerPreCheckoutQuery(update.getPreCheckoutQuery().getId(), true));
             } catch (TelegramApiException e) {
                 log.warn("Не получилось отправить сообщение", e);
             }
@@ -96,18 +98,18 @@ public class Bot extends TelegramLongPollingCommandBot {
         if (!message.getFrom().getId().equals(message.getChatId())) {
             Reports.reportGroupWriting(this, message.getChatId());
         }
-        if (users.waitingMessageEvents.containsKey(message.getFrom())) {
+        if (users.waitingMessageEvents.containsKey(message.getChatId())) {
             processingMessageEvents(message);
         } else if (message.hasText() && KeyboardData.contains(message.getText())) {
             processingMessageCommands(message);
-        } else if (message.hasText() && users.pairs.containsKey(message.getFrom())) {
+        } else if (message.hasText() && users.pairs.containsKey(message.getChatId())) {
             copyMessage(message);
         } else if (message.hasSuccessfulPayment()) {
-            servePayment(message.getSuccessfulPayment(), message.getFrom());
+            servePayment(message.getSuccessfulPayment(), message.getChatId());
         } else if (message.hasDice()) {
             troll(message);
         } else {
-            Reports.reportUnconnectedWriting(this, message.getFrom());
+            Reports.reportUnconnectedWriting(this, message.getChatId(), message.getFrom().getUserName());
         }
         if (message.hasPhoto() || message.hasDocument() ||
                 message.hasVideo() || message.hasAudio() ||
@@ -117,10 +119,10 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void copyMessage(Message message) {
-        users.messages.get(message.getFrom()).add(message);
+        users.getProperties(message.getChatId()).getMessages().add(message.getText());
         CopyMessage m = CopyMessage.builder()
                 .fromChatId(message.getChatId())
-                .chatId(users.pairs.get(message.getFrom()).getId())
+                .chatId(users.pairs.get(message.getChatId()))
                 .messageId(message.getMessageId())
                 .build();
         try {
@@ -131,7 +133,7 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void copyFileToAdminCheck(Message message) {
-        UserProperties userProperties = users.properties.get(message.getFrom());
+        UserProperties userProperties = users.getProperties(message.getChatId());
         String fileID = null;
         if (message.hasPhoto()) fileID = message.getPhoto().get(message.getPhoto().size() - 1).getFileId();
         else if (message.hasVideo()) fileID = message.getVideo().getFileId();
@@ -147,7 +149,7 @@ public class Bot extends TelegramLongPollingCommandBot {
                     .messageId(message.getMessageId())
                     .caption("От: @" + message.getFrom().getUserName() +
                             "\nС UserID: " + message.getFrom().getId() +
-                            "\nПола: " + Gender.getRusString(userProperties.getGender()) +
+                            "\nПола: " + userProperties.getGender().toRusString() +
                             "\nВозраста: " + userProperties.getAge() +
                             "\nID файла: " + fileID)
                     .build();
@@ -185,25 +187,31 @@ public class Bot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void servePayment(SuccessfulPayment payment, User user) {
+    private void servePayment(SuccessfulPayment payment, long chatID) {
         int days = Integer.parseInt(payment.getInvoicePayload());
-        users.properties.get(user).addPremium(Calendar.DATE, days);
+        users.getProperties(chatID).addPremium(Calendar.DATE, days);
     }
 
     private void processingMessageCommands(Message message) {
-        keyboardSwitch(message.getText(), message.getFrom(), message.getChat());
+        processingKeyboardData(message.getText(), message.getFrom(), message.getChat());
     }
 
     private void processingCallbackQuery(CallbackQuery callback) {
-        User user = users.chatIDs.get(callback.getMessage().getChatId());
-        if (user == null || !KeyboardData.contains(callback.getData())) return;
-        keyboardSwitch(callback.getData(), user, null);
+        @Nullable User user = users.UIDs.get(callback.getMessage().getChatId());
+        processingKeyboardData(callback.getData(), user, new Chat(callback.getMessage().getChatId(), "private"));
     }
 
-    private void keyboardSwitch(String conditionInString, User user, Chat chat) {
+    private void processingKeyboardData(String conditionInString, User user, Chat chat) {
         KeyboardData condition = KeyboardData.getConst(conditionInString);
         switch (condition) {
-            case REGISTER_THREAD -> createRegThread(user);
+            case START -> {
+                if (users.exist(chat.getId()) && users.getProperties(chat.getId()).isRegistred()) {
+                    writeAboutAlreadyRegistred(chat.getId());
+                } else {
+                    users.addUser(chat.getId());
+                    setGenderCommand.execute(this, user, chat, new String[]{UserService.OVERRIDE});
+                }
+            }
             case RANDOM -> randomCommand
                     .execute(this, user, chat, null);
             case FORM -> formCommand
@@ -214,13 +222,17 @@ public class Bot extends TelegramLongPollingCommandBot {
                     .execute(this, user, chat, null);
             case STOP -> stopCommand
                     .execute(this, user, chat, null);
-            case SET_MALE_GENDER -> {
-                users.properties.get(user).setGender(Gender.Boy);
-                writeAboutSuccessGender(user);
+            case SET_BOY_GENDER -> {
+                changeGender(chat.getId(), Gender.Boy, false);
+                if (users.getProperties(chat.getId()).getAge() == -1) {
+                    setAgeCommand.execute(Bot.this, user, chat, new String[]{OVERRIDE});
+                }
             }
-            case SET_FEMALE_GENDER -> {
-                users.properties.get(user).setGender(Gender.Girl);
-                writeAboutSuccessGender(user);
+            case SET_GIRL_GENDER -> {
+                changeGender(chat.getId(), Gender.Girl, false);
+                if (users.getProperties(chat.getId()).getAge() == -1) {
+                    setAgeCommand.execute(Bot.this, user, chat, new String[]{OVERRIDE});
+                }
             }
             case SET_GENDER -> setGenderCommand
                     .execute(this, user, chat, null);
@@ -228,14 +240,8 @@ public class Bot extends TelegramLongPollingCommandBot {
                     .execute(this, user, chat, null);
             case SET_FINDING_GENDER -> setFindingGenderCommand
                     .execute(this, user, chat, null);
-            case SET_MALE_FINDING_GENDER -> {
-                users.properties.get(user).setFindingGender(Gender.Boy);
-                writeAboutSuccessGender(user);
-            }
-            case SET_FEMALE_FINDING_GENDER -> {
-                users.properties.get(user).setFindingGender(Gender.Girl);
-                writeAboutSuccessGender(user);
-            }
+            case SET_BOY_FINDING_GENDER -> changeGender(chat.getId(), Gender.Boy, true);
+            case SET_GIRL_FINDING_GENDER -> changeGender(chat.getId(), Gender.Girl, true);
             case SET_MIN_FIND_AGE -> setMinFindingAgeCommand
                     .execute(this, user, null, null);
             case SET_MAX_FIND_AGE -> setMaxFindingAgeCommand
@@ -244,268 +250,41 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void processingMessageEvents(Message userMessage) {
-        User user = userMessage.getFrom();
-        users.waitingMessageEvents.get(user).accept(userMessage.getText());
-        users.waitingMessageEvents.remove(user);
+        users.waitingMessageEvents.get(userMessage.getChatId()).accept(userMessage);
+        users.waitingMessageEvents.remove(userMessage.getChatId());
     }
 
-    private void createRegThread(User user) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                UserProperties currentUserProperties = users.properties.get(user);
-                setGender(user, new String[]{UserService.OVERRIDE});
-                do {
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                } while (currentUserProperties.isGenderNotStated());
-                setAge(user, new String[]{UserService.OVERRIDE});
-                do {
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                } while (users.waitingMessageEvents.containsKey(user));
-                SendMessage successMessage = SendMessage.builder()
-                        .chatId(user.getId())
-                        .text("Вы успешно зарегистрированы, нажимайте /random и погнали чатиться\uD83E\uDD73)")
-                        .replyMarkup(new DefaultKeyboard())
-                        .build();
-                try {
-                    Bot.this.execute(successMessage);
-                } catch (TelegramApiException e) {
-                    log.warn("Не получилось отправить сообщение", e);
-                }
-            }
-
-            private void setAge(User user, String[] text) {
-                setAgeCommand.execute(Bot.this, user,
-                        null, text);
-            }
-
-            private void setGender(User user, String[] text) {
-                setGenderCommand.execute(Bot.this, user,
-                        null, text);
-            }
-
-        }).start();
+    private void changeGender(long chatID, Gender gender, boolean findingGender) {
+        if (findingGender) {
+            users.getProperties(chatID).setFindingGender(gender);
+        } else {
+            users.getProperties(chatID).setGender(gender);
+        }
+        writeAboutSuccessfullGenderChanging(chatID);
     }
 
-    private void writeAboutSuccessGender(User user) {
+    private void writeAboutSuccessfullGenderChanging(long chatID) {
         SendMessage successMessage = SendMessage.builder()
-                .chatId(user.getId())
+                .chatId(chatID)
                 .text("Вы успешно установили пол" + Emoji.GENDER)
                 .build();
         try {
             execute(successMessage);
-        } catch (TelegramApiException e2) {
-            log.warn("Не получилось отправить сообщение", e2);
-        }
-    }
-}
-
-@Slf4j
-class StartCommand extends UserInteractiveBotCommand {
-    private final BotConfig config;
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public StartCommand(String commandIdentifier, String description, BotConfig config) {
-        super(commandIdentifier, description);
-        this.config = config;
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        users.addUser(user, chat);
-        sendHelloMessage(absSender, user);
-        reportRegistration(user);
-    }
-
-    private void sendHelloMessage(AbsSender absSender, User user) {
-        SendPhoto firstMessage = SendPhoto.builder().chatId(user.getId())
-                .caption("Привет, " + user.getFirstName() + "\uD83D\uDE0A ты попал(а) в самого лампового бота для анонимного общения в телеграмме")
-                .photo(new InputFile("AgACAgIAAxkBAAIJk2Zjvk_Cf-4uznPnyMYMxwMpUe70AAKN2jEb_xUgS13GCak1cFjyAQADAgADeQADNQQ"))
-                .build();
-        SendMessage secondMessage = SendMessage.builder()
-                .chatId(user.getId())
-                .text("Перед тем как начать общение, необходимо указать информацию о себе, чтобы я понимал кого тебе подбирать\uD83E\uDDD0")
-                .replyMarkup(new GoKey())
-                .build();
-        try {
-            absSender.execute(firstMessage);
-            Thread.sleep(200);
-            absSender.execute(secondMessage);
-        } catch (TelegramApiException e) {
-            log.warn("Не получилось отправить сообщение", e);
-        } catch (InterruptedException e) {
-            log.error("Поток прерван во время отправки приветственного сообщения", e);
-        }
-    }
-
-    private void reportRegistration(User user) {
-        log.info("Зашел: @" + user.getUserName());
-    }
-
-    private void reportRegistrationToAdmin(AbsSender absSender, User user) {
-        SendMessage errorMessage = SendMessage.builder()
-                .chatId(config.getAdminUID())
-                .text("Зашел user " + user.getUserName())
-                .build();
-        try {
-            absSender.execute(errorMessage);
-        } catch (TelegramApiException e2) {
-            log.warn("Не получилось отправить сообщение", e2);
-        }
-    }
-
-    static class GoKey extends InlineKeyboardMarkup {
-        private final InlineKeyboardButton GO_BUTTON = new InlineKeyboardButton("ПОЕЕЕХАЛИИИИ");
-        private final List<List<InlineKeyboardButton>> BUTTONS;
-
-        {
-            GO_BUTTON.setCallbackData(KeyboardData.REGISTER_THREAD.getData());
-            BUTTONS = List.of(List.of(GO_BUTTON));
-        }
-
-        public GoKey() {
-            this.setKeyboard(BUTTONS);
-        }
-    }
-}
-
-
-@Slf4j
-class StopCommand extends UserInteractiveBotCommand {
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public StopCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
-        try {
-            User secondUser = users.pairs.get(user);
-            writeDisconnectMessage(absSender, user, secondUser);
-            users.pairs.remove(user);
-            writeDisconnectMessage(absSender, secondUser, user);
-            users.pairs.remove(secondUser);
-        } catch (NullPointerException e) {
-            Reports.reportUnconnectedWriting(absSender, user);
-        }
-    }
-
-    private void writeDisconnectMessage(AbsSender absSender, User firstUser, User secondUser) {
-        SendMessage disconnectMessage = SendMessage.builder()
-                .chatId(firstUser.getId())
-                .text("Вы успешно отсоединены от собеседника")
-                .replyMarkup(new DefaultKeyboard())
-                .build();
-        log.trace("Пользователь " + firstUser.getUserName() + " отсоединен от " + secondUser);
-        try {
-            absSender.execute(disconnectMessage);
         } catch (TelegramApiException e) {
             log.warn("Не получилось отправить сообщение", e);
         }
     }
-}
 
-class PremiumCommand extends UserInteractiveBotCommand {
-
-    /**
-     * Construct a command
-     *
-     * @param commandIdentifier the unique identifier of this command (e.g. the command string to
-     *                          enter into chat)
-     * @param description       the description of this command
-     */
-    public PremiumCommand(String commandIdentifier, String description) {
-        super(commandIdentifier, description);
-    }
-
-    @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (!(users.messages.containsKey(user) || strings != null &&
-                strings.length > 0 && UserService.OVERRIDE.equals(strings[0]))) {
-            Reports.reportNeedRegistration(absSender, user.getId());
-            return;
-        }
+    private void writeAboutAlreadyRegistred(long chatID) {
         try {
-            absSender.execute(SendMessage.builder()
-                    .chatId(user.getId())
-                    .text("Купить премиум подписку\nПодписка подключается моментально после покупки")
-                    .replyMarkup(new PremiumKeyboard(absSender))
+            execute(SendMessage.builder()
+                    .chatId(chatID)
+                    .text("Вы уже зарегистрированы\uD83D\uDE0A, нажимай на /random и погнали переписываться!")
                     .build());
         } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    static class PremiumKeyboard extends InlineKeyboardMarkup {
-        private final InlineKeyboardButton PAY_DAY_BUTTON = new InlineKeyboardButton("Купить на день");
-        private final InlineKeyboardButton PAY_WEEK_BUTTON = new InlineKeyboardButton("Купить на неделю");
-        private final InlineKeyboardButton PAY_MOUNTH_BUTTON = new InlineKeyboardButton("Купить на месяц");
-        private final List<List<InlineKeyboardButton>> BUTTONS;
-
-        {
-            BUTTONS = List.of(
-                    List.of(PAY_DAY_BUTTON),
-                    List.of(PAY_WEEK_BUTTON),
-                    List.of(PAY_MOUNTH_BUTTON)
-            );
-        }
-
-        public PremiumKeyboard(AbsSender absSender) {
-            try {
-                PAY_DAY_BUTTON.setUrl(absSender.execute(CreateInvoiceLink.builder()
-                        .title("Премиум 1 день")
-                        .description("Все возможности премиум подписки на 1 день")
-                        .payload("1")
-                        .providerToken("381764678:TEST:87212")
-                        .currency("RUB")
-                        .price(new LabeledPrice("Цена премиума на ДЕНЬ (мин. возможная цена в тг!)", 7000))
-                        .build()));
-                PAY_WEEK_BUTTON.setUrl(absSender.execute(CreateInvoiceLink.builder()
-                        .title("Премиум 1 неделя")
-                        .description("Все возможности премиум подписки на 1 неделю")
-                        .payload("7")
-                        .providerToken("381764678:TEST:87212")
-                        .currency("RUB")
-                        .price(new LabeledPrice("Цена премиума на 7 ДНЕЙ", 20000))
-                        .build()));
-                PAY_MOUNTH_BUTTON.setUrl(absSender.execute(CreateInvoiceLink.builder()
-                        .title("Премиум 1 месяц")
-                        .description("Все возможности премиум подписки на 1 месяц")
-                        .payload("31")
-                        .providerToken("381764678:TEST:87212")
-                        .currency("RUB")
-                        .price(new LabeledPrice("Цена премиума на 31 ДЕНЬ", 50000))
-                        .build()));
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-            }
-            this.setKeyboard(BUTTONS);
+            log.warn("Не получилось отправить сообщение", e);
         }
     }
 }
+
+
