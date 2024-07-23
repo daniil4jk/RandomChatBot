@@ -17,7 +17,7 @@ public class FriendsKeyboard extends InlineKeyboardMarkup {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
         boolean isRowHaveButton = false;
         List<InlineKeyboardButton> currentRow = null;
-        for (Friend f : service.getProperties(chatID).getFriends()) {
+        for (Friend f : service.getRCBUser(chatID).getFriends()) {
             if (isRowHaveButton) {
                 currentRow.add(createKeyboardButton(f));
                 isRowHaveButton = false;

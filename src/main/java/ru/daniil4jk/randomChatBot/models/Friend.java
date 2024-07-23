@@ -15,13 +15,15 @@ public class Friend {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long DBid;
     @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false)
     private RandomChatBotUser randomChatBotUser;
     private String name;
     private long telegramId;
 
-    public Friend(String name, long telegramId) {
+    public Friend(String name, long telegramId, RandomChatBotUser randomChatBotUser) {
         this.name = name;
         this.telegramId = telegramId;
+        this.randomChatBotUser = randomChatBotUser;
     }
 
     @Override

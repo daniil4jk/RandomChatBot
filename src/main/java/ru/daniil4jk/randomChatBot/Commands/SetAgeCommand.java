@@ -47,7 +47,7 @@ public class SetAgeCommand extends ProtectedBotCommand {
         }
         getUsers().messageEvents.put(chat.getId(), s -> {
             try {
-                setAge(getUsers().getProperties(s.getChatId()), Integer.parseInt(s.getText()));
+                setAge(getUsers().getRCBUser(s.getChatId()), Integer.parseInt(s.getText()));
                 SendMessage successMessage = SendMessage.builder()
                         .chatId(s.getChatId())
                         .text("Вы успешно установили возраст" + Emoji.AGE)
@@ -60,9 +60,9 @@ public class SetAgeCommand extends ProtectedBotCommand {
             } catch (TelegramApiException e) {
                 log.warn("Не получилось отправить сообщение", e);
             }
-            if (!getUsers().getProperties(s.getChatId()).isRegistred()) {
-                getUsers().getProperties(s.getChatId()).setRegistred(true);
-                getUsers().getProperties(s.getChatId()).setUserName(s.getFrom().getUserName());
+            if (!getUsers().getRCBUser(s.getChatId()).isRegistred()) {
+                getUsers().getRCBUser(s.getChatId()).setRegistred(true);
+                getUsers().getRCBUser(s.getChatId()).setUserName(s.getFrom().getUserName());
                 getUsers().UIDs.put(s.getChatId(), s.getFrom());
                 writeAboutSuccessfullRegistration(absSender, s.getChatId());
             }

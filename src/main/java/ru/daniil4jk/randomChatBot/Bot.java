@@ -150,7 +150,6 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void copyMessage(@NotNull Message message) {
-        //users.getProperties(message.getChatId()).getMessages().add(message.getText()); TODO add messages to UserService
         CopyMessage m = CopyMessage.builder()
                 .fromChatId(message.getChatId())
                 .chatId(users.pairs.get(message.getChatId()))
@@ -164,7 +163,7 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void copyFileToAdminCheck(Message message) {
-        RandomChatBotUser RandomChatBotUser = users.getProperties(message.getChatId());
+        RandomChatBotUser RandomChatBotUser = users.getRCBUser(message.getChatId());
         String fileID = null;
         if (message.hasPhoto()) fileID = message.getPhoto().get(message.getPhoto().size() - 1).getFileId();
         else if (message.hasVideo()) fileID = message.getVideo().getFileId();
@@ -209,7 +208,7 @@ public class Bot extends TelegramLongPollingCommandBot {
 
     private void servePayment(SuccessfulPayment payment, long chatID) {
         int days = Integer.parseInt(payment.getInvoicePayload());
-        users.getProperties(chatID).addPremium(Calendar.DATE, days);
+        users.getRCBUser(chatID).addPremium(Calendar.DATE, days);
     }
 
     private void processingMessageCommands(Message message) {
@@ -237,7 +236,7 @@ public class Bot extends TelegramLongPollingCommandBot {
         KeyboardData condition = KeyboardData.getConst(keyboardData);
         switch (condition) {
             case START -> {
-                if (users.exist(chat.getId()) && users.getProperties(chat.getId()).isRegistred()) {
+                if (users.exist(chat.getId()) && users.getRCBUser(chat.getId()).isRegistred()) {
                     writeAboutAlreadyRegistred(chat.getId());
                 } else {
                     users.addUser(chat.getId());
@@ -256,13 +255,13 @@ public class Bot extends TelegramLongPollingCommandBot {
                     .execute(this, user, chat, null);
             case SET_BOY_GENDER -> {
                 changeGender(chat.getId(), Gender.Boy, false);
-                if (users.getProperties(chat.getId()).getAge() == -1) {
+                if (users.getRCBUser(chat.getId()).getAge() == -1) {
                     setAgeCommand.execute(Bot.this, user, chat, new String[]{UserService.OVERRIDE_USER_PASS});
                 }
             }
             case SET_GIRL_GENDER -> {
                 changeGender(chat.getId(), Gender.Girl, false);
-                if (users.getProperties(chat.getId()).getAge() == -1) {
+                if (users.getRCBUser(chat.getId()).getAge() == -1) {
                     setAgeCommand.execute(Bot.this, user, chat, new String[]{UserService.OVERRIDE_USER_PASS});
                 }
             }
@@ -313,9 +312,9 @@ public class Bot extends TelegramLongPollingCommandBot {
 
     private void changeGender(long chatID, Gender gender, boolean findingGender) {
         if (findingGender) {
-            users.getProperties(chatID).setFindingGender(gender);
+            users.getRCBUser(chatID).setFindingGender(gender);
         } else {
-            users.getProperties(chatID).setGender(gender);
+            users.getRCBUser(chatID).setGender(gender);
         }
         writeAboutSuccessfulGenderChanging(chatID);
     }
@@ -346,8 +345,8 @@ public class Bot extends TelegramLongPollingCommandBot {
     private void writeAboutFriendWaitName(long chatID, long friendChatID) {
         String basePartOne = ", напиши в чат имя, которым ты бы хотел";
         String basePartTwo = " назвать нового друга" + Emoji.WINKING;
-        boolean isGirl = Gender.Girl.equals(users.getProperties(chatID).getGender());
-        boolean isFriendGirl = Gender.Girl.equals(users.getProperties(friendChatID).getGender());
+        boolean isGirl = Gender.Girl.equals(users.getRCBUser(chatID).getGender());
+        boolean isFriendGirl = Gender.Girl.equals(users.getRCBUser(friendChatID).getGender());
         try {
             execute(SendMessage.builder()
                     .text("Ты принял" + (isGirl ? "а" : "") + " заявку в друзья" +
@@ -365,7 +364,7 @@ public class Bot extends TelegramLongPollingCommandBot {
     }
 
     private void writeAboutFriendsSuccessfullyAdded(long chatID) {
-        boolean isGirl = Gender.Girl.equals(users.getProperties(chatID).getGender());
+        boolean isGirl = Gender.Girl.equals(users.getRCBUser(chatID).getGender());
         try {
             execute(SendMessage.builder()
                     .text("Ты успешно добавил" + (isGirl ? "а" : "") + " нового друга, ура " + Emoji.CUTE_CLOSINGEYES)
@@ -382,7 +381,7 @@ public class Bot extends TelegramLongPollingCommandBot {
                     .chatId(users.friendRequests.get(chatID))
                     .text("Твою заявку в друзья отклонили \uD83D\uDE14, но не расстривайся, ты еще найдешь новых друзей☺\uFE0F")
                     .build());
-            boolean isGirl = Gender.Girl.equals(users.getProperties(chatID).getGender());
+            boolean isGirl = Gender.Girl.equals(users.getRCBUser(chatID).getGender());
             execute(SendMessage.builder()
                     .chatId(chatID)
                     .text("Ты отказал" + (isGirl ? "ась" : "ся") + " от заявки в друзья")
@@ -407,8 +406,10 @@ public class Bot extends TelegramLongPollingCommandBot {
 
         @Override
         public void accept(@NotNull Message s) {
-            users.getProperties(s.getChatId()).getFriends()
-                    .add(new Friend(s.getText(), users.friendRequests.get(s.getChatId())));
+            users.getRCBUser(s.getChatId()).getFriends()
+                    .add(new Friend(s.getText(),
+                            users.friendRequests.get(s.getChatId()),
+                            users.getRCBUser(s.getChatId())));
             writeAboutFriendsSuccessfullyAdded(s.getChatId());
             users.friendRequests.remove(s.getChatId());
         }

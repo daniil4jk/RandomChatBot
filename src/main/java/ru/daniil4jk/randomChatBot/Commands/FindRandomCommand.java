@@ -56,8 +56,8 @@ public class FindRandomCommand extends ProtectedBotCommand {
                     Long secondUser = null;
                     for (long u1 : getUsers().finders.keySet()) {
                         for (long u2 : getUsers().finders.keySet()) {
-                            if (isGenderTwoSidedCompatible(getUsers().getProperties(u1), getUsers().getProperties(u2)) &&
-                                    isAgeCompatible(getUsers().getProperties(u1), getUsers().getProperties(u2)) &&
+                            if (isGenderTwoSidedCompatible(getUsers().getRCBUser(u1), getUsers().getRCBUser(u2)) &&
+                                    isAgeCompatible(getUsers().getRCBUser(u1), getUsers().getRCBUser(u2)) &&
                                     u1 != u2) {
                                 firstUser = u1;
                                 secondUser = u2;
@@ -119,7 +119,7 @@ public class FindRandomCommand extends ProtectedBotCommand {
     private void writeAboutRemove(AbsSender absSender, long UID) {
         SendMessage errorMessage = SendMessage.builder()
                 .chatId(UID)
-                .text("Извините, " + (getUsers().getProperties(UID).isPremium() ? "по вашим параметрам" : "для вас") +
+                .text("Извините, " + (getUsers().getRCBUser(UID).isPremium() ? "по вашим параметрам" : "для вас") +
                         " никого найти не удалось\uD83D\uDE14, но не расстраивайся, солнышко, ты можешь попробовать еще раз, мы верим в тебя!")
                 .build();
         try {
@@ -180,8 +180,8 @@ public class FindRandomCommand extends ProtectedBotCommand {
             if (config.isPremiumSystemActive()) {
                 absSender.execute(SendMessage.builder()
                         .chatId(UID)
-                        .text(getForm(getUsers().getProperties(UID).isPremium(),
-                                getUsers().getProperties(getUsers().pairs.get(UID))))
+                        .text(getForm(getUsers().getRCBUser(UID).isPremium(),
+                                getUsers().getRCBUser(getUsers().pairs.get(UID))))
                         .replyMarkup(chatKeyboard)
                         .build());
             }

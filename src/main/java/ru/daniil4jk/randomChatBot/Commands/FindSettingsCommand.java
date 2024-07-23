@@ -36,11 +36,11 @@ public class FindSettingsCommand extends ProtectedBotCommand {
 
     @Override
     public void protectedExecute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        if (getUsers().getProperties(chat.getId()).isPremium()) {
+        if (getUsers().getRCBUser(chat.getId()).isPremium()) {
             try {
                 absSender.execute(SendMessage.builder()
                         .chatId(chat.getId())
-                        .text(getForm(getUsers().getProperties(chat.getId())))
+                        .text(getForm(getUsers().getRCBUser(chat.getId())))
                         .replyMarkup(new PropertiesKeyboard())
                         .build());
             } catch (TelegramApiException e) {
@@ -52,10 +52,10 @@ public class FindSettingsCommand extends ProtectedBotCommand {
     }
 
     private String getForm(RandomChatBotUser properties) {
-        return "=== Настройки поиска ===\n\n    Желаемый пол: " + properties.getFindingGender().toRusString() + "  " + Emoji.FINDING_GENDER +
-                "\n    Мин. возраст для поиска: " + properties.getStartFindingAge() + " лет  " + Emoji.MIN_FINDING_AGE +
-                "\n    Макс. возраст для поиска: " + properties.getEndRequiredAge() + " лет  " + Emoji.MAX_FINDING_AGE +
-                "\n\n========================";
+        return "==== Настройки поиска ====\n\n    Желаемый пол: " + properties.getFindingGender().toRusString() + "  " + Emoji.FINDING_GENDER +
+                "\n   Мин. возраст для поиска: " + properties.getStartFindingAge() + " лет  " + Emoji.MIN_FINDING_AGE +
+                "\n   Макс. возраст для поиска: " + properties.getEndRequiredAge() + " лет  " + Emoji.MAX_FINDING_AGE +
+                "\n\n===========================";
     }
 
     static class PropertiesKeyboard extends InlineKeyboardMarkup {

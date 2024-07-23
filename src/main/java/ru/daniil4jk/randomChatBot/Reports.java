@@ -145,7 +145,7 @@ public class Reports {
 
     private static String getUserName(long UID) {
         try {
-            return getUsers().getProperties(UID).getUserName();
+            return getUsers().getRCBUser(UID).getUserName();
         } catch (NoSuchElementException e) {
             return "Незарегистрированный пользователь";
         }

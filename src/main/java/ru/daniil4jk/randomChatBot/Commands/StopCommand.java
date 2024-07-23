@@ -53,8 +53,8 @@ public class StopCommand extends UserServiceIntegratedBotCommand {
                 .text("Вы успешно отсоединены от собеседника")
                 .replyMarkup(defaultKeyboard)
                 .build();
-        log.trace("Пользователь " + getUsers().getProperties(UID) +
-                " отсоединен от " + getUsers().getProperties(secondUID));
+        log.trace("Пользователь " + getUsers().getRCBUser(UID) +
+                " отсоединен от " + getUsers().getRCBUser(secondUID));
         try {
             absSender.execute(disconnectMessage);
         } catch (TelegramApiException e) {

@@ -31,7 +31,7 @@ public class ShowFriendsCommand extends ProtectedBotCommand {
     @Override
     public void protectedExecute(AbsSender absSender, User user, Chat chat, String[] strings) {
         try {
-            if (getUsers().getProperties(chat.getId()).getFriends().isEmpty()) {
+            if (getUsers().getRCBUser(chat.getId()).getFriends().isEmpty()) {
                 absSender.execute(SendMessage.builder()
                         .chatId(chat.getId())
                         .text("У тебя пока что нет друзей " + Emoji.DOWNEYES + ",  но мы верим, ты их найдешь!")
@@ -39,10 +39,12 @@ public class ShowFriendsCommand extends ProtectedBotCommand {
             } else {
                 absSender.execute(SendMessage.builder()
                         .chatId(chat.getId())
-                        .text("====Твои друзья====" +
-                                "\n\n  Ты можешь отправить заявку на общение любому из них, " +
-                                "и, если он(а) согласится, я вас соединю " + Emoji.FRIENDS +
-                                "\n\n===================")
+                        .text("======= Твои друзья =======" +
+                                "\n\n  Ты можешь отправить заявку " +
+                                "\n  на общение любому из них, " +
+                                "\n  и, если он(а) согласится - " +
+                                "\n  я вас соединю " + Emoji.FRIENDS +
+                                "\n\n===========================")
                         .replyMarkup(new FriendsKeyboard(chat.getId()))
                         .build());
             }

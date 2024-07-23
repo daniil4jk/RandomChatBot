@@ -82,7 +82,7 @@ public class FindCallCommand extends ProtectedBotCommand {
 
     @NotNull
     private Friend getFriendByUID(long UID, long friendUID) {
-        for (Friend f : getUsers().getProperties(UID).getFriends()) {
+        for (Friend f : getUsers().getRCBUser(UID).getFriends()) {
             if (f.getTelegramId() == friendUID) {
                 return f;
             }

@@ -51,7 +51,7 @@ public class AddFriendCommand extends ProtectedBotCommand {
     }
 
     private void writeAboutInviteAlreadySent(AbsSender absSender, long chatID) throws TelegramApiException {
-        boolean isGirl = Gender.Girl.equals(getUsers().getProperties(chatID).getGender());
+        boolean isGirl = Gender.Girl.equals(getUsers().getRCBUser(chatID).getGender());
         absSender.execute(SendMessage.builder()
                 .chatId(chatID)
                 .text("Ты уже отправлял" + (isGirl ? "а" : "") +

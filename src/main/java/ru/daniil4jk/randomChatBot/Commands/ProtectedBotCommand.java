@@ -21,7 +21,7 @@ public abstract class ProtectedBotCommand extends UserServiceIntegratedBotComman
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         if (getUsers().exist(chat.getId()) &&
-                getUsers().getProperties(chat.getId()).isRegistred()
+                getUsers().getRCBUser(chat.getId()).isRegistred()
                 ||
                 strings != null && strings.length > 0 &&
                         UserService.OVERRIDE_USER_PASS.equals(strings[0])) {

@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.daniil4jk.randomChatBot.ApplicationContextProvider;
 import ru.daniil4jk.randomChatBot.constants.Gender;
 import ru.daniil4jk.randomChatBot.service.BotConfig;
+import ru.daniil4jk.randomChatBot.service.UserService;
 
 import java.util.*;
 
@@ -47,31 +47,11 @@ public class RandomChatBotUser {
         this.ID = userID;
     }
 
-    private void addThisToPremiumController(PremiumController pc) {
-        pc.getUserList().add(this);
-    }
-
-    @PostConstruct
-    private void initialSetPremium(PremiumController pc) {
-        if (!pc.premiumSystemActive) {
-            premium = true;
-        } else if (endPremium == null) {
-            premium = false;
-        } else {
-            premium = pc.getCurrentDate().before(endPremium);
-        }
-        if (premium) {
-            addThisToPremiumController(pc);
-        }
-    }
-
     public void addPremium(int field, int amount) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(field, amount);
         endPremium = calendar.getTime();
         premium = true;
-        ApplicationContextProvider.getApplicationContext().getBean(PremiumController.class)
-                .getUserList().add(this);
     }
 
     public boolean isPremiumActivatedAtLeastOnce() {
@@ -95,7 +75,7 @@ public class RandomChatBotUser {
         }
 
         RandomChatBotUser incoming = (RandomChatBotUser) obj;
-        return ID == ID
+        return  ID == ID
                 &&
                 (userName == null & incoming.getUserName() == null ||
                         (userName != null && userName.equals(incoming.getUserName())))
@@ -141,39 +121,3 @@ public class RandomChatBotUser {
     }
 }
 
-@Slf4j
-@Getter
-@Component
-class PremiumController {
-    public final boolean premiumSystemActive;
-    private final ArrayList<RandomChatBotUser> userList = new ArrayList<>();
-    private Date currentDate = new Date();
-
-
-    public PremiumController(BotConfig config) {
-        premiumSystemActive = config.isPremiumSystemActive();
-    }
-
-    @PostConstruct
-    private void createPremiumRenewThread() {
-        if (premiumSystemActive) {
-            new Thread(() -> {
-                while (true) {
-                    try {
-                        Thread.sleep(60000);
-                    } catch (InterruptedException e) {
-                        log.error("Поток обновления премиума был прерван!", e);
-                    }
-                    currentDate = new Date();
-                    for (RandomChatBotUser user : userList) {
-                        if (currentDate.after(user.getEndPremium())) {
-                            user.setPremium(false);
-                            userList.remove(user);
-                            log.trace("У пользователя " + user + " закончился premium");
-                        }
-                    }
-                }
-            }).start();
-        }
-    }
-}

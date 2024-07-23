@@ -94,11 +94,12 @@ public class FindCommand extends ProtectedBotCommand {
         message.setChatId(UID);
         message.setText(switch (name) {
             case REAL_NAME -> "Вы подключились к " +
-                    getUsers().getProperties(findingUID).getUserName();
+                    getUsers().getRCBUser(findingUID).getUserName();
             case FRIEND_NAME -> "Вы подключились к " +
                     getFriendByUID(UID, findingUID).getName() + ")";
             case ADMIN_NAME -> "Вы подключились к " +
-                    ("random".equals(config.getAdminName()) ? getRandomAdminName() : config.getAdminName());
+                    ("random".equals(config.getAdminNameForUsers()) ?
+                            getRandomAdminName() : config.getAdminNameForUsers());
         });
         try {
             absSender.execute(message);
@@ -120,7 +121,7 @@ public class FindCommand extends ProtectedBotCommand {
 
     @NotNull
     private Friend getFriendByUID(long UID, long friendUID) {
-        for (Friend f : getUsers().getProperties(UID).getFriends()) {
+        for (Friend f : getUsers().getRCBUser(UID).getFriends()) {
             if (f.getTelegramId() == friendUID) {
                 return f;
             }

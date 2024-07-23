@@ -35,12 +35,12 @@ public class FormCommand extends ProtectedBotCommand {
 
     @Override
     public void protectedExecute(AbsSender absSender, User user, Chat chat, String[] strings) {
-        RandomChatBotUser properties = getUsers().getProperties(chat.getId());
+        RandomChatBotUser properties = getUsers().getRCBUser(chat.getId());
         SendMessage formMessage = SendMessage.builder()
                 .chatId(chat.getId())
-                .text("=== Ваша анкета ===\n\n    Ваш пол: " + properties.getGender().toRusString() + "  " + Emoji.GENDER +
+                .text("======= Ваша анкета =======\n\n    Ваш пол: " + properties.getGender().toRusString() + "  " + Emoji.GENDER +
                         "\n    Ваш возраст: " + properties.getAge() + " лет  " + Emoji.AGE +
-                        "\n\n===================")
+                        "\n\n===========================")
                 .replyMarkup(new PropertiesKeyboard())
                 .build();
         try {

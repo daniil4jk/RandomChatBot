@@ -1,6 +1,7 @@
 package ru.daniil4jk.randomChatBot.Commands;
 
-import org.springframework.context.annotation.Lazy;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
@@ -13,7 +14,7 @@ import ru.daniil4jk.randomChatBot.service.UserService;
 
 @Component
 public class PremiumCommand extends UserServiceIntegratedBotCommand {
-    @Lazy
+    @Autowired
     private PremiumKeyboard premiumKeyboard;
 
     public PremiumCommand() {
@@ -32,7 +33,7 @@ public class PremiumCommand extends UserServiceIntegratedBotCommand {
     }
 
     @Override
-    public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
+    public void execute(AbsSender absSender, User user, @NotNull Chat chat, String[] strings) {
         if (!(getUsers().exist(chat.getId()) || strings != null &&
                 strings.length > 0 && UserService.OVERRIDE_USER_PASS.equals(strings[0]))) {
             Reports.reportNeedRegistration(absSender, chat.getId());
