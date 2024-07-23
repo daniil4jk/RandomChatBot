@@ -1,11 +1,11 @@
 spring:
   datasource:
-    url: jdbc:h2:file:/DATA/userbase
+    url: jdbc:h2:file:/DATA/userbase;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect

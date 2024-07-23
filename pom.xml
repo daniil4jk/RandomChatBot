@@ -8,9 +8,9 @@
 		<version>3.3.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.myFirstBot</groupId>
-	<artifactId>myFirstBot</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<groupId>ru.daniil4jk</groupId>
+	<artifactId>randomChatBot</artifactId>
+	<version>0.9BETA</version>
 	<name>myFirstBot</name>
 	<description>my first telegram bot</description>
 	<properties>
