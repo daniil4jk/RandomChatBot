@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="myFirstBot:jar">
+  <artifact type="jar" name="myFirstBot:jar">
     <output-path>$PROJECT_DIR$/out/</output-path>
     <root id="archive" name="myFirstBot.jar">
       <element id="module-output" name="myFirstBot" />

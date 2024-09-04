@@ -11,9 +11,13 @@
 	<groupId>ru.daniil4jk</groupId>
 	<artifactId>randomChatBot</artifactId>
 	<version>0.9BETA</version>
-	<name>myFirstBot</name>
-	<description>my first telegram bot</description>
-	<properties>
+    <packaging>pom</packaging>
+    <name>myFirstBot</name>
+	<description>Бот для анонимного общения</description>
+    <modules>
+		<module>Bot</module>
+	</modules>
+    <properties>
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
@@ -35,7 +39,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
